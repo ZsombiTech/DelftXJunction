@@ -9,8 +9,7 @@ import React, {
 import Map, { Source, Layer, type MapRef } from "react-map-gl/mapbox";
 import { XIcon, Clock, MapPin, Gauge, User } from "lucide-react"; // Added icons for the panel
 import * as THREE from "three";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { CustomLayerInterface } from "mapbox-gl";
 import mapboxgl from "mapbox-gl";
 import { Button, Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
@@ -67,34 +66,52 @@ const create3DCarLayer = (
       camera = new THREE.Camera();
       scene = new THREE.Scene();
 
-      // Lighting
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-      directionalLight.position.set(0, 70, 100).normalize();
-      scene.add(directionalLight);
-
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      // --- Ultra Bright Lighting Setup (10x lighter look) ---
+      const ambientLight = new THREE.AmbientLight(0xffffff, 10); // huge ambient brightness
       scene.add(ambientLight);
 
-      // Load 3D car model
-      const mtlLoader = new MTLLoader();
-      mtlLoader.load("/src/assets/models/Car-Model/Car.mtl", (materials) => {
-        materials.preload();
+      // Strong sunlight
+      const sunLight = new THREE.DirectionalLight(0xffffff, 12);
+      sunLight.position.set(100, 200, 300);
+      scene.add(sunLight);
 
-        const objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-        objLoader.load("/src/assets/models/Car-Model/Car.obj", (object) => {
-          carModel = object;
-          carModel.scale.set(4, 4, 4);
-          carModel.rotation.x = -Math.PI / 2;
-          carModel.rotation.z = Math.PI;
-          scene.add(carModel);
-        });
+      // Backlight for strong edge glow
+      const backLight = new THREE.DirectionalLight(0xffffff, 8);
+      backLight.position.set(-150, -100, 150);
+      scene.add(backLight);
+
+      // Fill light from the side
+      const sideLight = new THREE.DirectionalLight(0xffffff, 6);
+      sideLight.position.set(200, 0, 100);
+      scene.add(sideLight);
+
+      // Hemisphere for sky–ground glow
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 8);
+      hemiLight.position.set(0, 300, 0);
+      scene.add(hemiLight);
+
+      // Bright local point lights around the car
+      const carLight1 = new THREE.PointLight(0xffffff, 10, 200);
+      carLight1.position.set(5, 5, 5);
+      scene.add(carLight1);
+
+      // Load 3D car model
+      const gltfLoader = new GLTFLoader();
+      gltfLoader.load("/src/assets/models/Car-Model/car_red.glb", (gltf) => {
+        carModel = gltf.scene;
+
+        carModel.scale.set(4, 4, 4);
+        carModel.rotation.x = -Math.PI / 2;
+        carModel.rotation.z = Math.PI;
+
+        scene.add(carModel);
       });
 
       renderer = new THREE.WebGLRenderer({
         canvas: map.getCanvas(),
         context: gl,
-        antialias: true,
+        antialias: false, // important for mobile compatibility
+        alpha: false,
       });
 
       renderer.autoClear = false;
