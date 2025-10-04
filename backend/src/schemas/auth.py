@@ -28,6 +28,7 @@ class RegisterResponse(BaseModel):
     firstname: str | None = None
     lastname: str | None = None
     isRestNow: bool = False
+    isBreakMode: bool = False
 
 class LoginResponse(BaseModel):
     access_token: str

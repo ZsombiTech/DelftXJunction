@@ -42,12 +42,10 @@ export default function MapViewer() {
         setEarthQuakes(json);
         selectTime(endTime);
       })
-      .catch((err) => console.error("Could not load data", err)); // eslint-disable-line
+      .catch((err) => console.error("Could not load data", err));
   }, []);
 
   useEffect(() => {
-    const base = import.meta.env.VITE_APP_BACKEND_URL ?? "";
-    const url = `${base}/merchants/getAllMerchants`;
     const heatmap = [
       [4.4702926, 51.925125],
       [4.4705105, 51.92499],

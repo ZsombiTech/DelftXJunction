@@ -7,6 +7,7 @@ import {
   useStartTimeslotMutation,
   useEndTimeslotMutation,
 } from "../redux/api/timeslotApi";
+import LoadingScreen from "./LoadingScreen";
 
 // Define the dimensions and position based on Tailwind classes
 // w-16 = 64px, h-16 = 64px
@@ -29,10 +30,14 @@ const TransitionButton: React.FC = () => {
     null
   );
 
-  const [startTimeslot] = useStartTimeslotMutation();
-  const [endTimeslot] = useEndTimeslotMutation();
+  const [startTimeslot, { isLoading: isStarting }] = useStartTimeslotMutation();
+  const [endTimeslot, { isLoading: isEnding }] = useEndTimeslotMutation();
 
   const handleEarnClick = async () => {
+    if (user?.isBreakMode) {
+      // If in break mode, do nothing on click
+      return;
+    }
     try {
       const result = await startTimeslot().unwrap();
       setCurrentTimeslotId(result.timeslot_id);
@@ -55,6 +60,10 @@ const TransitionButton: React.FC = () => {
     setIsExpanded(false);
     setCurrentTimeslotId(null);
   };
+
+  if (isStarting || isEnding) {
+    return <LoadingScreen />;
+  }
 
   return (
     <AnimatePresence>
@@ -117,9 +126,10 @@ const TransitionButton: React.FC = () => {
           onClick={handleEarnClick}
           className={`
             fixed bottom-8 right-8 w-20 h-20 rounded-full text-xl
-            bg-black text-white font-bold text-sm z-50 
+            bg-black text-white font-bold text-sm z-[999] 
             flex items-center justify-center 
-            shadow-xl cursor-pointer transition-transform duration-300
+            shadow-xl transition-transform duration-300
+            ${user?.isBreakMode ? "bg-gray-400 cursor-not-allowed" : "hover:scale-105 cursor-pointer"}
           `}
           // The button fades out as the map expands
           initial={{ opacity: 1, scale: 1 }}

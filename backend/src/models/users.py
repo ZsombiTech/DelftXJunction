@@ -10,6 +10,7 @@ class Users(Model):
     password = fields.CharField(max_length=128)
     firstname = fields.CharField(max_length=30, null=True)
     lastname = fields.CharField(max_length=30, null=True)
+    isBreakMode = fields.BooleanField(default=False)
 
     earners: fields.ReverseRelation["UsersEarners"]
 
