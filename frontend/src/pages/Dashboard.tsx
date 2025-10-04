@@ -6,7 +6,6 @@ import RestAlertModal from "../components/RestAlertModal";
 import BreakModeToggle from "../components/BreakModeToggle";
 import { useToggleBreakModeMutation } from "../redux/api/userApi";
 import LoadingScreen from "../components/LoadingScreen";
-import { useFetchStatisticsQuery } from "../redux/api/statsApi";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -15,7 +14,7 @@ const Dashboard: React.FC = () => {
   const [isShowRestModal, setIsShowRestModal] = useState(false);
 
   const [toggleBreakMode, { isLoading }] = useToggleBreakModeMutation();
-  const { data: statistics } = useFetchStatisticsQuery();
+  const statistics = { earner: { totalEarnings: 123.45, rating: 4.78 } };
 
   useEffect(() => {
     if (user) {

@@ -3,6 +3,7 @@ from .customers import Customers
 from .earners import Earners
 from .riders import Riders
 from .users import Users
+from .jobs_like import JobsLike
 from .merchants import Merchants
 from .eats_orders import EatsOrders
 from .incentives_weekly import IncentivesWeekly

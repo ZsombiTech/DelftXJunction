@@ -1,11 +1,49 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, HTTPException
 from src.models.users import Users
 from src.models.users_earners import UsersEarners
 from src.middleware.auth import get_current_user
 from src.models.earners import Earners
+import os
+import httpx
+from src.models.incentives_weekly import IncentivesWeekly
+from src.models.incentives_weekly import IncentivesWeekly
 import numpy as np
 
 router = APIRouter(prefix="/info", tags=["info"])
+
+@router.get("/events", status_code=status.HTTP_200_OK)
+async def get_events():
+
+    EVENTS_API_URL = os.getenv("EVENTS_API_URL", "https://serpapi.com/search.json")
+    EVENTS_API_KEY = os.getenv("EVENTS_API_KEY")
+
+    if not EVENTS_API_URL or not EVENTS_API_KEY:
+        raise HTTPException(status_code=500, detail="Events API configuration missing")
+
+    # The KEY must be passed as a query parameter called 'api_key'.
+    # You also need a search query, like 'events' or a specific city's events.
+    params = {
+        "engine": "google_events", # Use the specific events engine
+        "q": "events near me",     # Example search query
+        "api_key": EVENTS_API_KEY  # The correct way to pass the key
+    }
+
+    print(params) # This will show the params being sent
+
+    async with httpx.AsyncClient() as client:
+        try:
+            # Pass the parameters to the request
+            response = await client.get(EVENTS_API_URL, params=params, timeout=10.0)
+            response.raise_for_status()
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=503, detail=f"Error connecting to Events API: {e}")
+        except httpx.HTTPStatusError as e:
+            # This will now correctly show the specific error from SerpApi (e.g., if the key is still invalid)
+            raise HTTPException(status_code=e.response.status_code, detail=f"Events API error: {e.response.text}")
+
+    events_data = response.json()
+    # Optionally process or filter events_data here
+    return {"events": events_data}
 
 
 @router.get("/me", status_code=status.HTTP_200_OK)
@@ -16,7 +54,7 @@ async def get_user_info(
     Get current user statistics and earner statistics if applicable
     """
     user_stats = {
-        "id": current_user.user_id,
+        "user_id": current_user.user_id,
         "email": current_user.email
     }
     # Check if user is also an earner

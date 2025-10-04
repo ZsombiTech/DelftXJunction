@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from shapely import GeometryCollection, MultiPolygon
 import traveltimepy as tt
 from traveltimepy.requests.common import Coordinates
 from traveltimepy.responses.time_map import Shape
@@ -34,21 +35,81 @@ def format_shapes(shapes: list[Shape]) -> ZoneFormat:
     ]
 
 
-def point_in_zone(point, area: ZoneFormat):
+def point_in_zone(point, zone: ZoneFormat):
     point_geom = Point(point[1], point[0])  # lng, lat for Shapely
 
-    for shape in area:
-        # Create main polygon from shell
-        polygon = Polygon(shape["shell"])
-
-        # Cut out holes if they exist
-        if shape["holes"]:
-            polygon = Polygon(shape["shell"], holes=shape["holes"])
-
+    for shape in zone:
+        polygon = Polygon(shape["shell"], holes=shape["holes"])
         if polygon.contains(point_geom):
             return True
 
     return False
+
+
+def cut_zone_with_others(zone: ZoneFormat, others: list[ZoneFormat]):
+    # Cut others from each shape
+    for i, shape in enumerate(zone):
+        polygon = Polygon(shape["shell"], holes=shape["holes"])
+        for other in others: # Each outer zone
+            for other_shape in other: # Each shape in the outer zone
+                other_polygon = Polygon(other_shape["shell"], holes=other_shape["holes"])
+                polygon: Polygon | MultiPolygon = polygon.difference(other_polygon)
+        
+        # Remove polygon if it's empty
+        if polygon.is_empty:
+            zone.pop(i)
+            continue
+
+        # If polygon is a GeometryCollection, append it to the zone
+        if polygon.geom_type == "GeometryCollection":
+            polygon = MultiPolygon([geom for geom in polygon.geoms if geom.geom_type == "Polygon"])
+            continue
+
+        # minds in motion motto connection idea
+
+        # In case of MultiPolygon, extract bodies and append them to the zone
+        if polygon.geom_type == "MultiPolygon":
+            zone.pop(i)
+            
+            for body in polygon.geoms:
+                if body.geom_type == "GeometryCollection":
+                    print(body)
+                    continue
+                zone.append({
+                    "shell": list(body.exterior.coords),
+                    "holes": [list(hole.coords) for hole in body.interiors]
+                })
+            continue
+        
+        # If polygon, convert back to ZoneFormat
+        if polygon.geom_type == "Polygon":
+            zone[i] = {
+                "shell": list(polygon.exterior.coords),
+                "holes": [list(hole.coords) for hole in polygon.interiors]
+            }
+            continue
+        
+        # Else, drop it
+        zone.pop(i)
+    
+    return zone
+
+
+def cut_poly_with_others(poly: Polygon, others: MultiPolygon):
+    for other in others:
+        poly = poly.difference(other)
+
+    if poly.geom_type == "GeometryCollection":
+        poly = MultiPolygon([geom for geom in poly.geoms if geom.geom_type == "Polygon"])
+
+    if poly.geom_type == "MultiPolygon":
+        poly: MultiPolygon = poly
+        return poly
+
+    if poly.geom_type == "Polygon":
+        return MultiPolygon([poly])
+
+    return None
 
 
 def get_zone(lat, lng, seconds):
@@ -75,7 +136,16 @@ def get_zone(lat, lng, seconds):
         }
     )
 
-    return format_shapes(response.results[0].shapes)
+    zone = format_shapes(response.results[0].shapes)
+
+    # Remove holes
+    for i in range(len(zone)):
+        zone[i]["holes"] = []
+
+    # for i in range(len(zone)):
+    #     zone[i]["shell"] = list(Polygon(zone[i]["shell"]).simplify(0.0005).exterior.coords)
+
+    return zone
 
 
 def test():

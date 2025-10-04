@@ -1,4 +1,4 @@
-import { Calendar, UserPen } from "lucide-react";
+import { Calendar, UserPen, HandCoins } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -13,7 +13,7 @@ export default function Navbar() {
 
   return (
     <header className="bg-uber-black text-uber-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center flex-wrap gap-10">
         <h1
           className="text-2xl font-bold cursor-pointer"
           onClick={() => navigate("/")}
@@ -22,6 +22,11 @@ export default function Navbar() {
         </h1>
         <div className="flex items-center space-x-10 shrink-0">
           <div className="flex items-center space-x-4">
+            <HandCoins
+              className="cursor-pointer h-6 w-6 text-uber-white"
+              onClick={() => navigate("/eventpredicter")}
+            />
+            <div className="w-px h-6 bg-uber-gray-700" />
             <Calendar
               className="cursor-pointer h-6 w-6 text-uber-white"
               onClick={() => navigate("/timetable")}
