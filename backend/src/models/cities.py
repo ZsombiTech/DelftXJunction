@@ -1,4 +1,4 @@
-from tortoise import fields, models
+from tortoise import fields, Model
 from tortoise.contrib.pydantic import pydantic_model_creator
 from Models import Earners
 
