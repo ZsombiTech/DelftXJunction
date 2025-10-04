@@ -46,6 +46,8 @@ const Dashboard: React.FC = () => {
     return <LoadingScreen />;
   }
 
+  const { data: statistics, error, isLoading } = useFetchStatisticsQuery();
+  console.log("Statistics data:", statistics);
   return (
     <div className="min-h-screen bg-uber-gray-50">
       <RestAlertModal
@@ -86,7 +88,9 @@ const Dashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-uber-gray-900 mb-2">
               Earnings
             </h3>
-            <p className="text-3xl font-bold text-uber-black">$0.00</p>
+            <p className="text-3xl font-bold text-uber-black">
+              ${statistics?.earner.totalEarnings?.toFixed(2) || "0.00"}
+            </p>
             <p className="text-sm text-uber-gray-500 mt-2">Total earnings</p>
           </div>
 
@@ -102,7 +106,9 @@ const Dashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-uber-gray-900 mb-2">
               Rating
             </h3>
-            <p className="text-3xl font-bold text-uber-black">5.0</p>
+            <p className="text-3xl font-bold text-uber-black">
+              {statistics?.earner.rating?.toFixed(2) || "0.00"}
+            </p>
             <p className="text-sm text-uber-gray-500 mt-2">Average rating</p>
           </div>
         </div>

@@ -3,6 +3,7 @@ from src.models.users import Users
 from src.models.users_earners import UsersEarners
 from src.middleware.auth import get_current_user
 from src.models.earners import Earners
+import numpy as np
 
 router = APIRouter(prefix="/info", tags=["info"])
 
@@ -18,20 +19,20 @@ async def get_user_info(
         "id": current_user.user_id,
         "email": current_user.email
     }
-    
     # Check if user is also an earner
     earner = await UsersEarners.get_or_none(user_id=current_user.user_id)
-    
     if earner:
         
         earner_data = await Earners.get_or_none(earner_id=earner.earner_id)
-        
+        earnings_daily = await earner_data.incentives_weekly.all()
         if earner_data:
             user_stats["earner"] = {
-                "id": earner_data.earner_id,
+                "earner_id": earner_data.earner_id,
                 "rating": earner_data.rating,
                 "earner_type": earner_data.earner_type,
                 "vehicle_type": earner_data.vehicle_type,
+                "totalEarnings": sum(earning.amount for earning in earnings_daily) if earnings_daily else 0.0
             }
+            
     
     return user_stats

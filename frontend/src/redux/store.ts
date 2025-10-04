@@ -8,12 +8,16 @@ import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { userSlice } from "./slices/userSlice";
 import { userApi } from "./api/userApi";
+import { statsSlice } from "./slices/statsSlice";
+import { statsApi } from "./api/statsApi";
 import { timeslotApi } from "./api/timeslotApi";
 
 const rootReducer = combineReducers({
   user: persistReducer({ key: "auth", storage }, userSlice.reducer),
+  stats: statsSlice.reducer,
 
   [userApi.reducerPath]: userApi.reducer,
+  [statsApi.reducerPath]: statsApi.reducer,
   [timeslotApi.reducerPath]: timeslotApi.reducer,
 });
 
@@ -21,7 +25,11 @@ export const store = configureStore({
   reducer: rootReducer,
   devTools: true,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({}).concat([userApi.middleware, timeslotApi.middleware]),
+    getDefaultMiddleware({}).concat([
+      userApi.middleware,
+      timeslotApi.middleware,
+      statsApi.middleware,
+    ]),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

@@ -23,7 +23,7 @@ class Earners(Model):
         null=True
     )
     # Reverse relation to UsersEarners
-    users: fields.ReverseRelation["UsersEarners"]
+    # users: fields.ReverseRelation["UsersEarners"]
 
     # Reverse relation to EatsOrders
     eats_orders: fields.ReverseRelation["EatsOrders"]

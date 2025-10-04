@@ -18,8 +18,5 @@ class UsersEarners(Model):
     class Meta:
         app = "models"
         table = "users_earners"
-
-    def __str__(self):
-        return f"{self.user} - {self.total_earnings}"
     
 EventSchema = pydantic_model_creator(UsersEarners)

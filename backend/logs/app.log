@@ -34,3 +34,4 @@
 2025-10-04 22:42:21,737 - app - INFO - Starting state space search in city Amsterdam with max depth 5
 2025-10-04 22:42:21,776 - app - INFO - Progress: 1, Depth: 0
 2025-10-04 22:42:21,776 - app - INFO - Progress: 2, Depth: 1
+2025-10-04 22:59:59,428 - app - INFO - Shutting down...
