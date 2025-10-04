@@ -4,4 +4,5 @@ export interface User {
   firstname: string | null;
   lastname: string | null;
   isRestNow: boolean;
+  isBreakMode: boolean;
 }

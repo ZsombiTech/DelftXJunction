@@ -132,6 +132,22 @@ export const userApi = createApi({
         }
       },
     }),
+    toggleBreakMode: builder.mutation<User, void>({
+      query() {
+        return {
+          url: "toggle_break_mode",
+          method: "POST",
+        };
+      },
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          await dispatch(userSlice.actions.setUser(data));
+        } catch (error) {
+          // Error handling is now done in components to avoid duplicates
+        }
+      },
+    }),
   }),
 });
 
@@ -141,4 +157,5 @@ export const {
   useForgotPasswordMutation,
   useLazyGetMeQuery,
   useUpdateUserMutation,
+  useToggleBreakModeMutation,
 } = userApi;

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from datetime import timedelta
+from datetime import timedelta, datetime
 from src.schemas.auth import UserRegister, UserLogin, ForgotPassword, UpdateProfileRequest, RegisterResponse, LoginResponse
 from src.models.users import Users
 from src.utils.security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -9,18 +9,34 @@ from src.models.timeslots import Timeslots
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+async def should_user_rest(user_id: int) -> bool:
+    """
+    Check if user should rest based on timeslots in the past 3 hours.
+    Returns True if user has more than 3 timeslots in the past 3 hours.
+    """
+    three_hours_ago = datetime.now() - timedelta(hours=3)
+
+    # Count timeslots from the past 3 hours for this user
+    timeslot_count = await Timeslots.filter(
+        user_id=user_id,
+        start_time__gte=three_hours_ago
+    ).count()
+
+    return timeslot_count > 3
+
+
 @router.get("/", response_model=RegisterResponse)
 async def get_me(current_user: Users = Depends(get_current_user)):
-    is_rest_now = False
-
-
     """Get current authenticated user"""
+    is_rest_now = await should_user_rest(current_user.user_id)
+
     return RegisterResponse(
         user_id=current_user.user_id,
         email=current_user.email,
         firstname=current_user.firstname,
         lastname=current_user.lastname,
-        isRestNow=is_rest_now
+        isRestNow=is_rest_now,
+        isBreakMode=current_user.isBreakMode
     )
 
 
@@ -52,7 +68,28 @@ async def register(user_data: UserRegister):
         email=user.email,
         firstname=user.firstname,
         lastname=user.lastname,
-        isRestNow=False  # Default value; adjust as needed
+        isRestNow=False,
+        isBreakMode=False  # Default value; adjust as needed
+    )
+
+@router.post("/toggle_break_mode", response_model=RegisterResponse)
+async def toggle_break_mode(
+    current_user: Users = Depends(get_current_user)
+):
+    """Toggle the user's break mode status"""
+
+    current_user.isBreakMode = not current_user.isBreakMode
+    await current_user.save()
+
+    is_rest_now = await should_user_rest(current_user.user_id)
+
+    return RegisterResponse(
+        user_id=current_user.user_id,
+        email=current_user.email,
+        firstname=current_user.firstname,
+        lastname=current_user.lastname,
+        isRestNow=is_rest_now,
+        isBreakMode=current_user.isBreakMode
     )
 
 
@@ -84,12 +121,16 @@ async def login(user_credentials: UserLogin):
         data={"sub": user.email, "user_id": user.user_id},
         expires_delta=access_token_expires
     )
+
+    is_rest_now = await should_user_rest(user.user_id)
+
     user_return = RegisterResponse(
         user_id=user.user_id,
         email=user.email,
         firstname=user.firstname,
         lastname=user.lastname,
-        isRestNow=False  # Default value; adjust as needed
+        isRestNow=is_rest_now,
+        isBreakMode=user.isBreakMode
     )
 
     return {"access_token": access_token, "token_type": "bearer", "user": user_return}
@@ -132,10 +173,14 @@ async def update_profile(
 
     await current_user.save()
 
+    is_rest_now = await should_user_rest(current_user.user_id)
+
     return RegisterResponse(
         user_id=current_user.user_id,
         email=current_user.email,
         firstname=current_user.firstname,
         lastname=current_user.lastname,
-        isRestNow=False  # Default value; adjust as needed
+        isRestNow=is_rest_now,
+        isBreakMode=current_user.isBreakMode
     )
+
