@@ -36,7 +36,7 @@ const MapControlPanel = (props: any) => {
         padding: "20px 24px",
         minWidth: "320px",
         maxWidth: "380px",
-        zIndex: 1000,
+        zIndex: 900,
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       }}

@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@maplibre/maplibre-gl-geocoder": "^1.9.1",
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.3.0",
     "@reduxjs/toolkit": "^2.9.0",
     "@supabase/supabase-js": "^2.58.0",
     "@tailwindcss/postcss": "^4.1.14",
@@ -27,13 +30,15 @@
     "react-map-gl": "^8.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.3",
-    "redux-persist": "^6.0.0"
+    "redux-persist": "^6.0.0",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
+    "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.36.0",

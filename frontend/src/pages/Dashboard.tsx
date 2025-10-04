@@ -1,6 +1,7 @@
 import React from "react";
 import { useAuth } from "../hooks/useAuth";
 import MapViewer from "../components/MapViewer";
+import TransitionButtonMap from "../components/TransitionButtonMap";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -50,6 +51,8 @@ const Dashboard: React.FC = () => {
           <MapViewer />
         </div>
       </main>
+
+      <TransitionButtonMap />
     </div>
   );
 };
