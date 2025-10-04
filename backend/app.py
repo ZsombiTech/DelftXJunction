@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.routers import auth
 from src.routers import merchants
+from src.routers import info
 
 log = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ def create_application() -> FastAPI:
     application = FastAPI()
     application.include_router(auth.router)
     application.include_router(merchants.router)
+    application.include_router(info.router)
     return application
 
 
