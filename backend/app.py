@@ -19,6 +19,7 @@ def create_application() -> FastAPI:
     application.include_router(timeslots.router)
     application.include_router(predictions.router)
     application.include_router(heatmap.router)
+    application.include_router(admin.router)
     return application
 
 
