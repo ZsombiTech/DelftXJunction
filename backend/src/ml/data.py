@@ -17,12 +17,13 @@ client = tt.Client(app_id, api_key)
 CoordinatePolygon = list[tuple[float, float]]
 
 # A zone can consist of multiple polygons (due to fragmentation), so it's a list
-ZoneFormat = list[dict[ # dict for "shell" and "holes"
+ZoneFormat = list[dict[  # dict for "shell" and "holes"
     str, (
-        CoordinatePolygon # type of "shell" (polygon)
-        | list[CoordinatePolygon] # type of "holes" (list of polygons)
+        CoordinatePolygon  # type of "shell" (polygon)
+        | list[CoordinatePolygon]  # type of "holes" (list of polygons)
     )
 ]]
+
 
 def format_shapes(shapes: list[Shape]) -> ZoneFormat:
     return [
@@ -31,6 +32,7 @@ def format_shapes(shapes: list[Shape]) -> ZoneFormat:
             "holes": [[(coord.lng, coord.lat) for coord in hole] for hole in shape.holes]
         } for shape in shapes
     ]
+
 
 def point_in_zone(point, area: ZoneFormat):
     point_geom = Point(point[1], point[0])  # lng, lat for Shapely
@@ -75,6 +77,7 @@ def get_zone(lat, lng, seconds):
 
     return format_shapes(response.results[0].shapes)
 
+
 def test():
     zone = get_zone(51.924413, 4.477738, 360)
 
@@ -87,6 +90,8 @@ def test():
     test_point_out = (51.916193, 4.466101)  # lat, lng
 
     # Test with Shapely (will show message if not installed)
-    print(f"Point {test_point_origin} in area: {point_in_zone(test_point_origin, zone)}")
+    print(
+        f"Point {test_point_origin} in area: {point_in_zone(test_point_origin, zone)}")
     print(f"Point {test_point_in} in area: {point_in_zone(test_point_in, zone)}")
-    print(f"Point {test_point_out} in area: {point_in_zone(test_point_out, zone)}")
+    print(
+        f"Point {test_point_out} in area: {point_in_zone(test_point_out, zone)}")
