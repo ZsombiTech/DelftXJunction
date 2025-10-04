@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Enable dark mode variant */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Uber colors */
+  --color-uber-black: #000000;
+  --color-uber-white: #ffffff;
+  --color-uber-gray-50: #f6f6f6;
+  --color-uber-gray-100: #eeeeee;
+  --color-uber-gray-200: #e2e2e2;
+  --color-uber-gray-300: #cbcbcb;
+  --color-uber-gray-400: #afafaf;
+  --color-uber-gray-500: #6b6b6b;
+  --color-uber-gray-600: #545454;
+  --color-uber-gray-700: #333333;
+  --color-uber-gray-800: #1a1a1a;
+  --color-uber-gray-900: #0d0d0d;
+
+  /* Fonts */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Base styles */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
