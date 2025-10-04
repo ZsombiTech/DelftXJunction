@@ -1,6 +1,6 @@
 from tortoise import fields, Model
 from tortoise.contrib.pydantic import pydantic_model_creator
-from tortoise.models import Model
+from src.models.eats_orders import EatsOrders
 
 class Earners(Model):
     earner_id = fields.TextField(pk=True)
@@ -16,6 +16,8 @@ class Earners(Model):
         related_name="earners",
         null=True
     )
+
+    eats_orders: fields.ReverseRelation["EatsOrders"]  # Reverse relation to EatsOrders
 
     class Meta:
         table = "earners"
