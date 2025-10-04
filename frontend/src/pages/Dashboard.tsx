@@ -14,6 +14,7 @@ const Dashboard: React.FC = () => {
   const [isShowRestModal, setIsShowRestModal] = useState(false);
 
   const [toggleBreakMode, { isLoading }] = useToggleBreakModeMutation();
+  const { data: statistics, error, isLoading } = useFetchStatisticsQuery();
 
   useEffect(() => {
     if (user) {
@@ -35,6 +36,18 @@ const Dashboard: React.FC = () => {
   const handleDriveOn = () => {
     setIsShowRestModal(false);
   };
+
+  
+  const handleToggleBreakMode = async (checked: boolean) => {
+    setIsBreakMode(checked);
+    await toggleBreakMode();
+  };
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+
 
   return (
     <div className="min-h-screen bg-uber-gray-50">
