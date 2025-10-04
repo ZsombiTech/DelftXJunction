@@ -27,6 +27,7 @@ class RegisterResponse(BaseModel):
     email: EmailStr
     firstname: str | None = None
     lastname: str | None = None
+    isRestNow: bool = False
 
 class LoginResponse(BaseModel):
     access_token: str

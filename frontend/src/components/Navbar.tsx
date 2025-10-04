@@ -1,4 +1,4 @@
-import { UserPen } from "lucide-react";
+import { Calendar, UserPen } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -20,11 +20,18 @@ export default function Navbar() {
         >
           Smart Earner Dashboard
         </h1>
-        <div className="flex items-center space-x-4 shrink-0">
-          <UserPen
-            className="cursor-pointer h-6 w-6 text-uber-white"
-            onClick={() => navigate("/profile")}
-          />
+        <div className="flex items-center space-x-10 shrink-0">
+          <div className="flex items-center space-x-4">
+            <Calendar
+              className="cursor-pointer h-6 w-6 text-uber-white"
+              onClick={() => navigate("/timetable")}
+            />
+            <div className="w-px h-6 bg-uber-gray-700" />
+            <UserPen
+              className="cursor-pointer h-6 w-6 text-uber-white"
+              onClick={() => navigate("/profile")}
+            />
+          </div>
           <button
             onClick={handleSignOut}
             className="px-4 py-2 bg-uber-white text-uber-black cursor-pointer rounded-md font-medium hover:bg-uber-gray-100 transition"

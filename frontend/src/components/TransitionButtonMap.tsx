@@ -3,6 +3,10 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MapPage from "./MapPage"; // Your react-map-gl component
 import { useAuth } from "../hooks/useAuth";
+import {
+  useStartTimeslotMutation,
+  useEndTimeslotMutation,
+} from "../redux/api/timeslotApi";
 
 // Define the dimensions and position based on Tailwind classes
 // w-16 = 64px, h-16 = 64px
@@ -21,14 +25,35 @@ const TransitionButton: React.FC = () => {
   const { user } = useAuth();
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentTimeslotId, setCurrentTimeslotId] = useState<number | null>(
+    null
+  );
 
-  const handleEarnClick = () => {
-    // A slight delay can make the transition look even smoother if needed
-    setIsExpanded(true);
+  const [startTimeslot] = useStartTimeslotMutation();
+  const [endTimeslot] = useEndTimeslotMutation();
+
+  const handleEarnClick = async () => {
+    try {
+      const result = await startTimeslot().unwrap();
+      setCurrentTimeslotId(result.timeslot_id);
+      setIsExpanded(true);
+    } catch (error) {
+      console.error("Failed to start timeslot:", error);
+      // Still expand the map even if timeslot creation fails
+      setIsExpanded(true);
+    }
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    if (currentTimeslotId) {
+      try {
+        await endTimeslot(currentTimeslotId).unwrap();
+      } catch (error) {
+        console.error("Failed to end timeslot:", error);
+      }
+    }
     setIsExpanded(false);
+    setCurrentTimeslotId(null);
   };
 
   return (

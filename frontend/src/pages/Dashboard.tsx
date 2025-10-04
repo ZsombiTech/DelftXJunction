@@ -1,13 +1,29 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import MapViewer from "../components/MapViewer";
 import TransitionButtonMap from "../components/TransitionButtonMap";
+import RestAlertModal from "../components/RestAlertModal";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(user?.isRestNow || false);
+
+  const handleTakeBreak = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleDriveOn = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-uber-gray-50">
+      <RestAlertModal
+        isOpen={isModalOpen}
+        onTakeBreak={handleTakeBreak}
+        onDriveOn={handleDriveOn}
+      />
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-uber-white rounded-lg shadow-md p-6 mb-6">

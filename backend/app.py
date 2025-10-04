@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.routers import auth
 from src.routers import merchants
 from src.routers import info
+from src.routers import timeslots
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ def create_application() -> FastAPI:
     application.include_router(auth.router)
     application.include_router(merchants.router)
     application.include_router(info.router)
+    application.include_router(timeslots.router)
     return application
 
 

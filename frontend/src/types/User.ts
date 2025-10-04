@@ -3,4 +3,5 @@ export interface User {
   email: string;
   firstname: string | null;
   lastname: string | null;
+  isRestNow: boolean;
 }

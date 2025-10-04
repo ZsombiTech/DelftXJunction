@@ -4,18 +4,23 @@ from src.schemas.auth import UserRegister, UserLogin, ForgotPassword, UpdateProf
 from src.models.users import Users
 from src.utils.security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from src.middleware.auth import get_current_user
+from src.models.timeslots import Timeslots
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.get("/", response_model=RegisterResponse)
 async def get_me(current_user: Users = Depends(get_current_user)):
+    is_rest_now = False
+
+
     """Get current authenticated user"""
     return RegisterResponse(
         user_id=current_user.user_id,
         email=current_user.email,
-        firstname=current_user.first_name,
-        lastname=current_user.last_name
+        firstname=current_user.firstname,
+        lastname=current_user.lastname,
+        isRestNow=is_rest_now
     )
 
 
@@ -38,15 +43,16 @@ async def register(user_data: UserRegister):
     user = await Users.create(
         email=user_data.email,
         password=hashed_password,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name
+        firstname=user_data.firstname,
+        lastname=user_data.lastname
     )
 
     return RegisterResponse(
         user_id=user.user_id,
         email=user.email,
         firstname=user.firstname,
-        lastname=user.lastname
+        lastname=user.lastname,
+        isRestNow=False  # Default value; adjust as needed
     )
 
 
@@ -82,7 +88,8 @@ async def login(user_credentials: UserLogin):
         user_id=user.user_id,
         email=user.email,
         firstname=user.firstname,
-        lastname=user.lastname
+        lastname=user.lastname,
+        isRestNow=False  # Default value; adjust as needed
     )
 
     return {"access_token": access_token, "token_type": "bearer", "user": user_return}
@@ -130,4 +137,5 @@ async def update_profile(
         email=current_user.email,
         firstname=current_user.firstname,
         lastname=current_user.lastname,
+        isRestNow=False  # Default value; adjust as needed
     )
