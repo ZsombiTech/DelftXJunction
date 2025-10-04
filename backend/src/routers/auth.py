@@ -14,8 +14,8 @@ async def get_me(current_user: Users = Depends(get_current_user)):
     return RegisterResponse(
         user_id=current_user.user_id,
         email=current_user.email,
-        firstname=current_user.firstname,
-        lastname=current_user.lastname
+        firstname=current_user.first_name,
+        lastname=current_user.last_name
     )
 
 
@@ -38,8 +38,8 @@ async def register(user_data: UserRegister):
     user = await Users.create(
         email=user_data.email,
         password=hashed_password,
-        firstname=user_data.firstname,
-        lastname=user_data.lastname
+        first_name=user_data.first_name,
+        last_name=user_data.last_name
     )
 
     return RegisterResponse(
@@ -106,6 +106,7 @@ async def forgot_password(forgot_data: ForgotPassword):
 
     return {"message": "If the email exists, a password reset link has been sent"}
 
+
 @router.put("/update_profile", response_model=RegisterResponse)
 async def update_profile(
     body: UpdateProfileRequest,
@@ -116,7 +117,7 @@ async def update_profile(
     print("Updating profile for user:", current_user.email)
     print("New firstname:", body.firstname)
     print("New lastname:", body.lastname)
-        
+
     if body.firstname is not None:
         current_user.firstname = body.firstname
     if body.lastname is not None:
