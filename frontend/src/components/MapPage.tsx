@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, {
   useEffect,
@@ -108,7 +107,6 @@ const create3DCarLayer = (
     },
 
     render(gl, matrix) {
-      if (!gl || !matrix) return;
       if (!carModel) return;
 
       const rotationZ = new THREE.Matrix4().makeRotationZ(
@@ -169,8 +167,8 @@ const MapPage: React.FC<MapPageProps> = ({
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  const routeCoordinates =
-    (route?.features[0]?.geometry as any).coordinates || [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const routeCoordinates = route?.features[0]?.geometry.coordinates || [];
 
   // 1. Fetch route from Mapbox Directions API
   useEffect(() => {
