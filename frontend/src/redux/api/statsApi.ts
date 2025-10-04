@@ -15,7 +15,6 @@ export const statsApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${import.meta.env.VITE_APP_BACKEND_URL}/info`,
     prepareHeaders: (headers, { getState }) => {
-      console.log(`${import.meta.env.VITE_APP_BACKEND_URL}/info/me`);
       const token = (getState() as RootState).user.token;
       headers.set("Authorization", `Bearer ${token}`);
       return headers;

@@ -6,6 +6,7 @@ from src.routers import merchants
 from src.routers import info
 from src.routers import timeslots
 from src.routers import predictions
+from src.routers import heatmap
 from src.utils.logger import logger
 from src.routers import admin
 
@@ -17,7 +18,11 @@ def create_application() -> FastAPI:
     application.include_router(info.router)
     application.include_router(timeslots.router)
     application.include_router(predictions.router)
+<<<<<<< Updated upstream
     application.include_router(admin.router)
+=======
+    application.include_router(heatmap.router)
+>>>>>>> Stashed changes
     return application
 
 

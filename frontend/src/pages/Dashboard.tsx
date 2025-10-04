@@ -15,7 +15,9 @@ const Dashboard: React.FC = () => {
   const [isShowRestModal, setIsShowRestModal] = useState(false);
 
   const [toggleBreakMode, { isLoading }] = useToggleBreakModeMutation();
-  const { data: statistics } = useFetchStatisticsQuery();
+  const statistics = { earner: { totalEarnings: 123.45, rating: 4.78 } };
+  // const { data: statistics } =
+  // useFetchStatisticsQuery();
 
   useEffect(() => {
     if (user) {

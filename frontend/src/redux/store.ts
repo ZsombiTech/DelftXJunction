@@ -11,6 +11,7 @@ import { userApi } from "./api/userApi";
 import { statsSlice } from "./slices/statsSlice";
 import { statsApi } from "./api/statsApi";
 import { timeslotApi } from "./api/timeslotApi";
+import { zonesApi } from "./api/zonesApi";
 
 const rootReducer = combineReducers({
   user: persistReducer({ key: "auth", storage }, userSlice.reducer),
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   [userApi.reducerPath]: userApi.reducer,
   [statsApi.reducerPath]: statsApi.reducer,
   [timeslotApi.reducerPath]: timeslotApi.reducer,
+  [zonesApi.reducerPath]: zonesApi.reducer,
 });
 
 export const store = configureStore({
@@ -29,6 +31,7 @@ export const store = configureStore({
       userApi.middleware,
       timeslotApi.middleware,
       statsApi.middleware,
+      zonesApi.middleware,
     ]),
 });
 
