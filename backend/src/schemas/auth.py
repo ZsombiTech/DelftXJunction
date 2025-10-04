@@ -25,8 +25,14 @@ class Token(BaseModel):
 class RegisterResponse(BaseModel):
     user_id: int
     email: EmailStr
+    firstname: str | None = None
+    lastname: str | None = None
 
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str
     user: RegisterResponse
+
+class UpdateProfileRequest(BaseModel):
+    firstname: str | None = None
+    lastname: str | None = None

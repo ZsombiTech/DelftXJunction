@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 import UberLogo from "../../assets/images/uberlogo.webp";
+import LoadingScreen from "../../components/LoadingScreen";
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -44,6 +45,10 @@ const Register: React.FC = () => {
       }, 2000);
     }
   };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-uber-black flex items-center justify-center px-4">

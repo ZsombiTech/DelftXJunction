@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import UberLogo from "../../assets/images/uberlogo.webp";
+import LoadingScreen from "../../components/LoadingScreen";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -25,6 +26,10 @@ const Login: React.FC = () => {
       navigate("/");
     }
   };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-uber-black flex items-center justify-center px-4">
@@ -100,7 +105,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-uber-black text-uber-white py-3 px-4 rounded-md font-medium hover:bg-uber-gray-900 focus:outline-none focus:ring-2 focus:ring-uber-black focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer w-full bg-uber-black text-uber-white py-3 px-4 rounded-md font-medium hover:bg-uber-gray-900 focus:outline-none focus:ring-2 focus:ring-uber-black focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in"}
             </button>
