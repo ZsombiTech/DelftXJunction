@@ -1,6 +1,7 @@
 venv
 *.py[cod]
 *.pyo
+*.pyc
 *.pyd
 .env
 /__pycache__/
