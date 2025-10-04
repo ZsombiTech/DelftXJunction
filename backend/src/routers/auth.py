@@ -35,7 +35,6 @@ async def register(user_data: UserRegister):
 
     # Create new user
     user = await Users.create(
-        username="",
         email=user_data.email,
         password_hash=hashed_password,
         first_name=user_data.first_name,
@@ -44,7 +43,6 @@ async def register(user_data: UserRegister):
 
     return UserResponse(
         user_id=user.user_id,
-        username="",
         email=user.email,
         first_name=user.first_name,
         last_name=user.last_name
