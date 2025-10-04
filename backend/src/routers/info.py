@@ -13,7 +13,7 @@ from src.models.timeslots import Timeslots
 router = APIRouter(prefix="/info", tags=["info"])
 
 @router.get("/events", status_code=status.HTTP_200_OK)
-async def get_events():
+async def get_events(latitude: float, longitude: float):
 
     EVENTS_API_URL = os.getenv("EVENTS_API_URL", "https://serpapi.com/search.json")
     EVENTS_API_KEY = os.getenv("EVENTS_API_KEY")
@@ -21,32 +21,68 @@ async def get_events():
     if not EVENTS_API_URL or not EVENTS_API_KEY:
         raise HTTPException(status_code=500, detail="Events API configuration missing")
 
-    # The KEY must be passed as a query parameter called 'api_key'.
-    # You also need a search query, like 'events' or a specific city's events.
-    params = {
-        "engine": "google_events", # Use the specific events engine
-        "q": "events near me",     # Example search query
-        "api_key": EVENTS_API_KEY  # The correct way to pass the key
-    }
-
-    print(params) # This will show the params being sent
-
     async with httpx.AsyncClient() as client:
+        # --- Attempt 1: Highly Localized Search ---
+        search_query_local = f"events near {latitude},{longitude}"
+        params_local = {
+            "engine": "google_events",
+            "q": search_query_local,
+            "api_key": EVENTS_API_KEY
+        }
+        
+        print(f"Attempting local search with params: {params_local}")
+        
         try:
-            # Pass the parameters to the request
-            response = await client.get(EVENTS_API_URL, params=params, timeout=10.0)
+            response = await client.get(EVENTS_API_URL, params=params_local, timeout=10.0)
             response.raise_for_status()
+            events_data = response.json()
+            
+            # Check if there are actual 'events_results'
+            if events_data.get("events_results"):
+                print("Local events found.")
+                return {"events": events_data}
+            
+            print("Local search returned no/few events. Proceeding to fallback.")
+
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
+            print(f"Error on local search attempt: {e}. Proceeding to fallback.")
+            # We don't raise an exception yet, we try the fallback.
+
+
+        # --- Fallback: Broader Search (e.g., using a general term or popular city) ---
+        # The key to a broader search is to drop the specific location from 'q' 
+        # or use a known major city name if you can derive one.
+        # For a simple fallback, we'll try 'events' and let the API decide the scope.
+        search_query_fallback = "popular events in the Netherlands"
+        params_fallback = {
+            "engine": "google_events",
+            "q": search_query_fallback,
+            "api_key": EVENTS_API_KEY
+            # Optionally, you could add a 'location' parameter if you could
+            # reverse geocode the lat/lon to a city/region, but for a 
+            # general fallback, 'popular events' is a simple start.
+        }
+
+        print(f"Attempting fallback search with params: {params_fallback}")
+
+        try:
+            response = await client.get(EVENTS_API_URL, params=params_fallback, timeout=10.0)
+            response.raise_for_status()
+            events_data_fallback = response.json()
+            
+            if events_data_fallback.get("events_results"):
+                print("Fallback events found.")
+                return {"events": events_data_fallback}
+            
+            # If the fallback still returns nothing, we raise an error.
+            print("Fallback search also returned no events.")
+            raise HTTPException(status_code=404, detail="No events found locally or broadly.")
+
         except httpx.RequestError as e:
-            raise HTTPException(status_code=503, detail=f"Error connecting to Events API: {e}")
+            raise HTTPException(status_code=503, detail=f"Error connecting to Events API on fallback: {e}")
         except httpx.HTTPStatusError as e:
-            # This will now correctly show the specific error from SerpApi (e.g., if the key is still invalid)
-            raise HTTPException(status_code=e.response.status_code, detail=f"Events API error: {e.response.text}")
-
-    events_data = response.json()
-    # Optionally process or filter events_data here
-    return {"events": events_data}
-
-
+            raise HTTPException(status_code=e.response.status_code, detail=f"Events API error on fallback: {e.response.text}")
+        
 @router.get("/me", status_code=status.HTTP_200_OK)
 async def get_user_info(
     current_user: Users = Depends(get_current_user)

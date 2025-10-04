@@ -9,6 +9,11 @@ interface StatisticsResponse {
   user_id: number;
 }
 
+interface EventsRequest {
+  latitude: number;
+  longitude: number;
+}
+
 export const statsApi = createApi({
   reducerPath: "statsApi",
   baseQuery: fetchBaseQuery({
@@ -34,10 +39,14 @@ export const statsApi = createApi({
         }
       },
     }),
-    fetchEvents: builder.mutation<any, void>({
-      query: () => ({
+    fetchEvents: builder.mutation<any, EventsRequest>({
+      query: (data) => ({
         url: "events",
         method: "GET",
+        params: {
+          latitude: data.latitude,
+          longitude: data.longitude,
+        },
       }),
       async onQueryStarted(_, {}) {
         try {

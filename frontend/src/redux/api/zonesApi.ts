@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { type RootState } from "../store";
 import { type Zone } from "../../types";

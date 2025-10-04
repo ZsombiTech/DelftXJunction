@@ -37,9 +37,14 @@ const DemandPredictor: React.FC = () => {
         setWeather(weatherRes.data.current_weather);
 
         // Fetch events data
-        const eventsRes = await fetchEvents();
+        const eventsRes = await fetchEvents({
+          latitude: lat,
+          longitude: lon,
+        });
         setEvents(
-          eventsRes.data.events ? eventsRes.data.events.events_results : []
+          eventsRes.data.events
+            ? (eventsRes.data.events.events_results ?? [])
+            : []
         );
       } catch (error) {
         console.error("Error fetching data:", error);
