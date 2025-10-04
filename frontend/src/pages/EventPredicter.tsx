@@ -148,7 +148,7 @@ const DemandPredictor: React.FC = () => {
         </p>
       </header>
 
-      <main className="max-w-4xl mx-auto space-y-8">
+      <main className="mx-auto space-y-8">
         <div
           className={`p-6 rounded-xl shadow-lg flex flex-col items-center text-center ${getDemandStyle(
             demandLevel
