@@ -184,6 +184,8 @@ const MapPage: React.FC<MapPageProps> = ({
   );
   const carBearingRef = useRef<number>(0);
 
+  const [updateTick, setUpdateTick] = useState<number>(0);
+
   const [currentLngLat, setCurrentLngLat] = useState<[number, number]>(start);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
@@ -310,6 +312,13 @@ const MapPage: React.FC<MapPageProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUpdateTick((t) => t + 1);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   // --- STATISTICAL PANEL LOGIC ---
 
   // Calculate simulated remaining time and distance (simplified)
@@ -344,7 +353,7 @@ const MapPage: React.FC<MapPageProps> = ({
       minute: "2-digit",
     });
 
-    if (distanceKm == "0.0") {
+    if (distanceKm == "0.0" || distanceKm == "0.1") {
       setIsSuccessModalOpen(true);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -365,7 +374,7 @@ const MapPage: React.FC<MapPageProps> = ({
       driverName: driverName,
       vehicle: "Tesla Model 3", // Placeholder
     };
-  }, [routeInfo, driverName, routeCoordinates.length]);
+  }, [routeInfo, routeCoordinates.length, updateTick, driverName]);
   // Note: The dependency `positionIndexRef.current` isn't a true dependency
   // as it's a ref and doesn't trigger a re-render. We'll rely on the
   // `setCurrentLngLat` state update to trigger the re-render.
