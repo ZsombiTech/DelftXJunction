@@ -3,15 +3,11 @@ from src.models.users import Users
 from src.models.users_earners import UsersEarners
 from src.middleware.auth import get_current_user
 from src.models.earners import Earners
-<<<<<<< Updated upstream
 import os
 import httpx
-=======
+from src.models.incentives_weekly import IncentivesWeekly
 from src.models.incentives_weekly import IncentivesWeekly
 import numpy as np
->>>>>>> Stashed changes
-
-from src.utils.logger import logger
 
 router = APIRouter(prefix="/info", tags=["info"])
 
@@ -61,13 +57,12 @@ async def get_user_info(
         "user_id": current_user.user_id,
         "email": current_user.email
     }
-
-<<<<<<< Updated upstream
     # Check if user is also an earner
     earner = await UsersEarners.get_or_none(user_id=current_user.user_id)
     if earner:
+        
         earner_data = await Earners.get_or_none(earner_id=earner.earner_id)
-        earnings_daily = await earner_data.incentives_weekly.all() if earner_data else []
+        earnings_daily = await earner_data.incentives_weekly.all()
         if earner_data:
             user_stats["earner"] = {
                 "earner_id": earner_data.earner_id,
@@ -76,28 +71,6 @@ async def get_user_info(
                 "vehicle_type": earner_data.vehicle_type,
                 "totalEarnings": sum(earning.amount for earning in earnings_daily) if earnings_daily else 0.0
             }
-
-    return user_stats
-=======
-    
-
-    # Check if user is also an earner
-    earner = await UsersEarners.get_or_none(user_id=current_user.user_id)
-    if earner:
-        incentives_array = await IncentivesWeekly.get_or_none(earner_id=earner.earner_id).all()
-        logger.info(f"User stats for {current_user.email}: {user_stats}, {incentives_array}")
-
-        # earnings_daily = earner_data.incentives_weekly
-        # user_stats["earner"] = {
-            #     "earner_id": earner_data.earner_id,
-            #     "rating": earner_data.rating,
-            #     "earner_type": earner_data.earner_type,
-            #     "vehicle_type": earner_data.vehicle_type,
-            #     "totalEarnings": sum(earning.amount for earning in earnings_daily) if earnings_daily else 0.0
-            
-
-    print(user_stats)
             
     
     return user_stats
->>>>>>> Stashed changes

@@ -18,11 +18,6 @@ def create_application() -> FastAPI:
     application.include_router(info.router)
     application.include_router(timeslots.router)
     application.include_router(predictions.router)
-<<<<<<< Updated upstream
-    application.include_router(admin.router)
-=======
-    application.include_router(heatmap.router)
->>>>>>> Stashed changes
     return application
 
 
