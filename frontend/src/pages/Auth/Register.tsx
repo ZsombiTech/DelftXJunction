@@ -58,7 +58,7 @@ const Register: React.FC = () => {
         <div className="text-center mb-8">
           <img
             src={UberLogo}
-            alt="Smart Earner Logo"
+            alt="Uber Auto Logo"
             className="mx-auto h-32 w-auto"
           />
           <h1 className="text-4xl font-bold text-uber-white">Register</h1>
