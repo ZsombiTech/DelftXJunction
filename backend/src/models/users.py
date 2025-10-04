@@ -1,5 +1,5 @@
-from tortoise.models import Model
-from tortoise import fields
+from tortoise import fields, models
+from tortoise.contrib.pydantic import pydantic_model_creator
 
 class Users(Model):
     user_id = fields.IntField(pk=True)
@@ -14,3 +14,6 @@ class Users(Model):
 
     def __str__(self):
         return self.username
+    
+
+EventSchema = pydantic_model_creator(Users)
