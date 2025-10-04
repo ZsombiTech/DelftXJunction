@@ -88,14 +88,14 @@ const Login: React.FC = () => {
               />
             </div>
 
-            <div className="text-right">
+            {/*<div className="text-right">
               <Link
                 to="/forgotPassword"
                 className="text-sm text-uber-black hover:text-uber-gray-700 font-medium"
               >
                 Forgot password?
               </Link>
-            </div>
+            </div>*/}
 
             <button
               type="submit"

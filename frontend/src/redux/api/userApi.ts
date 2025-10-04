@@ -6,7 +6,8 @@ import { userSlice } from "../slices/userSlice";
 import { type User } from "../../types";
 
 interface LoginResponse {
-  token: string;
+  access_token: string;
+  token_type: string;
   user: User;
 }
 
@@ -59,7 +60,7 @@ export const userApi = createApi({
           const { data } = await queryFulfilled;
 
           await dispatch(userSlice.actions.setUser(data.user));
-          await dispatch(userSlice.actions.setToken(data.token));
+          await dispatch(userSlice.actions.setToken(data.access_token));
         } catch (error: any) {
           // Error handling is now done in components to avoid duplicates
         }
@@ -96,7 +97,7 @@ export const userApi = createApi({
       },
     }),
 
-    getMe: builder.query<LoginResponse, void>({
+    getMe: builder.query<User, void>({
       query: () => {
         return {
           url: "",
@@ -107,9 +108,27 @@ export const userApi = createApi({
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          await dispatch(userSlice.actions.setUser(data.user));
+
+          await dispatch(userSlice.actions.setUser(data));
         } catch (error) {
           await dispatch(userSlice.actions.logOut());
+        }
+      },
+    }),
+    updateUser: builder.mutation<User, Partial<User>>({
+      query(data) {
+        return {
+          url: "update_profile",
+          method: "PUT",
+          body: data,
+        };
+      },
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          await dispatch(userSlice.actions.setUser(data));
+        } catch (error) {
+          // Error handling is now done in components to avoid duplicates
         }
       },
     }),
@@ -121,4 +140,5 @@ export const {
   useRegisterUserMutation,
   useForgotPasswordMutation,
   useLazyGetMeQuery,
+  useUpdateUserMutation,
 } = userApi;

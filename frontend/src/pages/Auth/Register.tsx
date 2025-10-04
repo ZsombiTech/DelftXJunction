@@ -130,10 +130,10 @@ const Register: React.FC = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-uber-black text-uber-white py-3 px-4 rounded-md font-medium hover:bg-uber-gray-900 focus:outline-none focus:ring-2 focus:ring-uber-black focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || success}
+              className="cursor-pointer w-full bg-uber-black text-uber-white py-3 px-4 rounded-md font-medium hover:bg-uber-gray-900 focus:outline-none focus:ring-2 focus:ring-uber-black focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Creating account..." : "Create account"}
+              {loading || success ? "Creating account..." : "Create account"}
             </button>
           </form>
 

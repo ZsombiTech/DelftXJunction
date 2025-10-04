@@ -4,8 +4,8 @@ from pydantic import BaseModel, EmailStr
 class UserRegister(BaseModel):
     email: EmailStr
     password: str
-    first_name: str | None = None
-    last_name: str | None = None
+    firstname: str | None = None
+    lastname: str | None = None
 
 
 class UserLogin(BaseModel):
@@ -22,11 +22,11 @@ class Token(BaseModel):
     token_type: str
 
 
-class UserResponse(BaseModel):
+class RegisterResponse(BaseModel):
     user_id: int
-    email: str
-    first_name: str | None
-    last_name: str | None
+    email: EmailStr
 
-    class Config:
-        from_attributes = True
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: RegisterResponse
