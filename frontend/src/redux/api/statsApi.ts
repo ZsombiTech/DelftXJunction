@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-empty-pattern */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
@@ -35,7 +36,21 @@ export const statsApi = createApi({
         }
       },
     }),
+    fetchEvents: builder.mutation<any, void>({
+      query: () => ({
+        url: "events",
+        method: "GET",
+      }),
+      async onQueryStarted(_, {}) {
+        try {
+          // Optionally, you can dispatch actions to store statistics in the Redux state
+          // await dispatch(statsSlice.actions.setStatistics(data));
+        } catch (error) {
+          console.error("Failed to fetch events:", error);
+        }
+      },
+    }),
   }),
 });
 
-export const { useFetchStatisticsQuery } = statsApi;
+export const { useFetchStatisticsQuery, useFetchEventsMutation } = statsApi;
