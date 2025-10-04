@@ -1,36 +1,21 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import Login from "./pages/Auth/Login";
-import Register from "./pages/Auth/Register";
-import ForgotPassword from "./pages/Auth/ForgotPassword";
-import Dashboard from "./pages/Dashboard";
-import ProtectedRoute from "./routes/ProtectedRoute";
+import { BrowserRouter } from "react-router-dom";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { SnackbarProvider } from "notistack";
+import { persistor, store } from "./redux/store";
+import { Router } from "./routes/Router";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <Provider store={store}>
+      <PersistGate persistor={persistor}>
+        <SnackbarProvider maxSnack={3} autoHideDuration={2000}>
+          <BrowserRouter>
+            <Router />
+          </BrowserRouter>
+        </SnackbarProvider>
+      </PersistGate>
+    </Provider>
   );
 }
 

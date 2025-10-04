@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import UberLogo from "../../assets/images/uberlogo.webp";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     const { error } = await signIn(email, password);
@@ -21,7 +22,7 @@ const Login: React.FC = () => {
       setError(error.message);
       setLoading(false);
     } else {
-      navigate('/');
+      navigate("/");
     }
   };
 
@@ -30,7 +31,15 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md">
         {/* Logo/Title */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-uber-white mb-2">Smart Earner</h1>
+          <img
+            src={UberLogo}
+            alt="Smart Earner Logo"
+            className="mx-auto h-32 w-auto"
+          />
+
+          <h1 className="text-4xl font-bold text-uber-white mb-2">
+            Smart Earner
+          </h1>
           <p className="text-uber-gray-400">Sign in to continue</p>
         </div>
 
@@ -44,7 +53,10 @@ const Login: React.FC = () => {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-uber-gray-900 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-uber-gray-900 mb-2"
+              >
                 Email
               </label>
               <input
@@ -59,7 +71,10 @@ const Login: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-uber-gray-900 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-uber-gray-900 mb-2"
+              >
                 Password
               </label>
               <input
@@ -75,7 +90,7 @@ const Login: React.FC = () => {
 
             <div className="text-right">
               <Link
-                to="/forgot-password"
+                to="/forgotPassword"
                 className="text-sm text-uber-black hover:text-uber-gray-700 font-medium"
               >
                 Forgot password?
@@ -87,14 +102,17 @@ const Login: React.FC = () => {
               disabled={loading}
               className="w-full bg-uber-black text-uber-white py-3 px-4 rounded-md font-medium hover:bg-uber-gray-900 focus:outline-none focus:ring-2 focus:ring-uber-black focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-uber-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-uber-black hover:text-uber-gray-700 font-medium">
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                className="text-uber-black hover:text-uber-gray-700 font-medium"
+              >
                 Sign up
               </Link>
             </p>

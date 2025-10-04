@@ -1,6 +1,7 @@
-from tortoise import fields, models
+from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_model_creator
-from Models import Earners
+from .earners import Earners
+from tortoise.models import Model
 
 class Cities(Model):
     city_id = fields.IntField(pk=True)

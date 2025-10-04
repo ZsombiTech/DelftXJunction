@@ -1,4 +1,4 @@
-from tortoise import fields, models
+from tortoise import fields, Model
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 class Users(Model):
@@ -10,6 +10,7 @@ class Users(Model):
     last_name = fields.CharField(max_length=30, null=True)
 
     class Meta:
+        app = "models"
         table = "users"
 
     def __str__(self):

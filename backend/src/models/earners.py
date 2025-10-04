@@ -1,5 +1,6 @@
-from tortoise import fields, models
+from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.models import Model
 
 class Earners(Model):
     earner_id = fields.TextField(pk=True)
