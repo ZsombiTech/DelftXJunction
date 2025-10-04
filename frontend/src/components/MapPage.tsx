@@ -46,6 +46,7 @@ const calculateBearing = (
   return (bearingDeg + 360) % 360; // Normalize to 0-360 degrees
 };
 
+
 // Create 3D car layer using Three.js
 const create3DCarLayer = (
   initialCoordinates: [number, number],
@@ -128,9 +129,8 @@ const create3DCarLayer = (
       if (!carModel) return;
 
       const rotationZ = new THREE.Matrix4().makeRotationZ(
-        Math.PI / 2 - carBearingRef.current * (Math.PI / 180)
+        (carBearingRef.current * Math.PI) / 180
       );
-
       const translation = new THREE.Matrix4().makeTranslation(
         carPositionRef.current.x,
         carPositionRef.current.y,
