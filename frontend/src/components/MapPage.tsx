@@ -46,7 +46,6 @@ const calculateBearing = (
   return (bearingDeg + 360) % 360; // Normalize to 0-360 degrees
 };
 
-
 // Create 3D car layer using Three.js
 const create3DCarLayer = (
   initialCoordinates: [number, number],
@@ -98,7 +97,12 @@ const create3DCarLayer = (
 
       // Load 3D car model
       const gltfLoader = new GLTFLoader();
-      gltfLoader.load("/src/assets/models/Car-Model/car_red.glb", (gltf) => {
+      let modelLocation = "/models/car_red.glb";
+
+      if (import.meta.env.MODE === "development") {
+        modelLocation = "/src/assets/models/Car-Model/car_red.glb";
+      }
+      gltfLoader.load(modelLocation, (gltf) => {
         carModel = gltf.scene;
 
         carModel.scale.set(4, 4, 4);
