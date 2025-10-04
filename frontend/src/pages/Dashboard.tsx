@@ -36,18 +36,6 @@ const Dashboard: React.FC = () => {
     setIsShowRestModal(false);
   };
 
-  // Handler for the toggle component
-  const handleToggleBreakMode = async (checked: boolean) => {
-    setIsBreakMode(checked);
-    await toggleBreakMode();
-  };
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  const { data: statistics, error, isLoading } = useFetchStatisticsQuery();
-  console.log("Statistics data:", statistics);
   return (
     <div className="min-h-screen bg-uber-gray-50">
       <RestAlertModal
