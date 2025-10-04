@@ -51,9 +51,9 @@ export default function MapViewer() {
   }, [earthquakes, allDays, selectedTime]);
 
   return (
-    <>
+    <div className="relative h-full">
       <MapGL
-        style={{ width: "100vw", height: "100vh", position: "relative" }}
+        style={{ width: "100vw", height: "100vh" }}
         initialViewState={{
           latitude: 40,
           longitude: -100,
@@ -68,7 +68,6 @@ export default function MapViewer() {
           </Source>
         )}
       </MapGL>
-
       <MapControlPanel
         startTime={timeRange[0]}
         endTime={timeRange[1]}
@@ -77,6 +76,6 @@ export default function MapViewer() {
         onChangeTime={selectTime}
         onChangeAllDays={useAllDays}
       />
-    </>
+    </div>
   );
 }

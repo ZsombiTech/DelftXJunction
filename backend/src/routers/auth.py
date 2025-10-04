@@ -1,24 +1,23 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from datetime import timedelta
-from src.schemas.auth import UserRegister, UserLogin, ForgotPassword, Token, UserResponse
+from src.schemas.auth import UserRegister, UserLogin, ForgotPassword, Token, RegisterResponse, LoginResponse
 from src.models.users import Users
 from src.utils.security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from src.middleware.auth import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.get("/", response_model=UserResponse)
-async def get_me():
+@router.get("/", response_model=RegisterResponse)
+async def get_me(current_user: Users = Depends(get_current_user)):
     """Get current authenticated user"""
-    # This is a placeholder implementation.
-    # In a real application, you would extract the user from the request context.
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented"
+    return RegisterResponse(
+        user_id=current_user.user_id,
+        email=current_user.email,
     )
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegister):
     """Register a new user"""
 
@@ -36,20 +35,18 @@ async def register(user_data: UserRegister):
     # Create new user
     user = await Users.create(
         email=user_data.email,
-        password_hash=hashed_password,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name
+        password=hashed_password,
+        firstname=user_data.firstname,
+        lastname=user_data.lastname
     )
 
-    return UserResponse(
+    return RegisterResponse(
         user_id=user.user_id,
         email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name
     )
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 async def login(user_credentials: UserLogin):
     """Login user and return JWT token"""
 
@@ -64,7 +61,7 @@ async def login(user_credentials: UserLogin):
         )
 
     # Verify password
-    if not verify_password(user_credentials.password, user.password_hash):
+    if not verify_password(user_credentials.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -77,8 +74,12 @@ async def login(user_credentials: UserLogin):
         data={"sub": user.email, "user_id": user.user_id},
         expires_delta=access_token_expires
     )
+    user_return = RegisterResponse(
+        user_id=user.user_id,
+        email=user.email,
+    )
 
-    return Token(access_token=access_token, token_type="bearer")
+    return {"access_token": access_token, "token_type": "bearer", "user": user_return}
 
 
 @router.post("/change_password", status_code=status.HTTP_200_OK)
@@ -98,3 +99,20 @@ async def forgot_password(forgot_data: ForgotPassword):
     # - Store token with expiration
 
     return {"message": "If the email exists, a password reset link has been sent"}
+
+@router.put("/update_profile", response_model=RegisterResponse)
+async def update_profile(firstname: str | None = None, lastname: str | None =
+    None, current_user: Users = Depends(get_current_user)):
+        """Update user profile information"""
+    
+        if firstname is not None:
+            current_user.firstname = firstname
+        if lastname is not None:
+            current_user.lastname = lastname
+    
+        await current_user.save()
+    
+        return RegisterResponse(
+            user_id=current_user.user_id,
+            email=current_user.email,
+        )
