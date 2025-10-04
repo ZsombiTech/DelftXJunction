@@ -7,6 +7,7 @@ from src.routers import auth
 
 log = logging.getLogger(__name__)
 
+
 def create_application() -> FastAPI:
     application = FastAPI()
     application.include_router(auth.router)
@@ -21,7 +22,7 @@ origins = [
     "http://localhost:8000",
     "http://localhost:3000",
     "https://delftxjunction.vercel.app"
-]   
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,12 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
-@app.on_event("startup")
-async def startup_event():
-    print("Starting up...")
-    init_db(app)
+init_db(app)
 
 
 @app.on_event("shutdown")
