@@ -7,6 +7,7 @@ from src.routers import info
 from src.routers import timeslots
 from src.routers import predictions
 from src.utils.logger import logger
+from src.routers import admin
 
 
 def create_application() -> FastAPI:
@@ -16,6 +17,7 @@ def create_application() -> FastAPI:
     application.include_router(info.router)
     application.include_router(timeslots.router)
     application.include_router(predictions.router)
+    application.include_router(admin.router)
     return application
 
 
