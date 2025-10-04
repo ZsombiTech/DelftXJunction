@@ -4,10 +4,7 @@ venv
 *.pyc
 *.pyd
 .env
-/__pycache__/
+__pycache__/
 /venv/
-/src/__pycache__/
-/src/db/__pycache__/
-/src/models/__pycache__/
-
 .venv
+logs/
