@@ -107,6 +107,7 @@ const create3DCarLayer = (
     },
 
     render(gl, matrix) {
+      if (!gl) return;
       if (!carModel) return;
 
       const rotationZ = new THREE.Matrix4().makeRotationZ(
@@ -168,7 +169,9 @@ const MapPage: React.FC<MapPageProps> = ({
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const routeCoordinates = route?.features[0]?.geometry.coordinates || [];
+  const routeCoordinates = route?.features[0]?.geometry
+    ? (route?.features[0]?.geometry as any).coordinates
+    : [];
 
   // 1. Fetch route from Mapbox Directions API
   useEffect(() => {
@@ -341,7 +344,7 @@ const MapPage: React.FC<MapPageProps> = ({
       driverName: driverName,
       vehicle: "Tesla Model 3", // Placeholder
     };
-  }, [routeInfo, routeCoordinates.length, positionIndexRef.current]);
+  }, [routeInfo, driverName, routeCoordinates.length]);
   // Note: The dependency `positionIndexRef.current` isn't a true dependency
   // as it's a ref and doesn't trigger a re-render. We'll rely on the
   // `setCurrentLngLat` state update to trigger the re-render.
