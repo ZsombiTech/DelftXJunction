@@ -14,8 +14,8 @@ class Earners(Model):
     experience_months = fields.IntField(null=True)
     rating = fields.FloatField(null=True)
     status = fields.CharField(max_length=20, default="active")
-    longitude = fields.FloatField(null=True, default=0.0)
-    latitude = fields.FloatField(null=True, default=0.0)
+    longitude = fields.FloatField(null=False, default=0.0)
+    latitude = fields.FloatField(null=False, default=0.0)
     destination_zone = fields.CharField(max_length=100, null=True)
     home_city = fields.ForeignKeyField(
         "models.Cities",

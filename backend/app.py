@@ -1,5 +1,3 @@
-import logging
-
 from src.db.database import init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,8 +5,8 @@ from src.routers import auth
 from src.routers import merchants
 from src.routers import info
 from src.routers import timeslots
-
-log = logging.getLogger(__name__)
+from src.routers import predictions
+from src.utils.logger import logger
 
 
 def create_application() -> FastAPI:
@@ -17,6 +15,7 @@ def create_application() -> FastAPI:
     application.include_router(merchants.router)
     application.include_router(info.router)
     application.include_router(timeslots.router)
+    application.include_router(predictions.router)
     return application
 
 
@@ -43,9 +42,10 @@ init_db(app)
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    print("Shutting down...")
+    logger.info("Shutting down...")
 
 
 @app.get("/ping")
 def pong():
+    logger.info("Ping endpoint called")
     return {"ping": "pong!"}
