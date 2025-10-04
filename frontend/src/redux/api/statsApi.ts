@@ -1,6 +1,7 @@
+/* eslint-disable no-empty-pattern */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { type RootState } from "../store";
-import { userSlice } from "../slices/userSlice";
 import { type StatsEarner, type StatsRider } from "../../types";
 
 interface StatisticsResponse {
@@ -25,9 +26,8 @@ export const statsApi = createApi({
         url: "me",
         method: "GET",
       }),
-      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+      async onQueryStarted(_, {}) {
         try {
-          const { data } = await queryFulfilled;
           // Optionally, you can dispatch actions to store statistics in the Redux state
           // await dispatch(statsSlice.actions.setStatistics(data));
         } catch (error) {

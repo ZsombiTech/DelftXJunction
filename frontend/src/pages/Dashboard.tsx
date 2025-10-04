@@ -6,6 +6,7 @@ import RestAlertModal from "../components/RestAlertModal";
 import BreakModeToggle from "../components/BreakModeToggle";
 import { useToggleBreakModeMutation } from "../redux/api/userApi";
 import LoadingScreen from "../components/LoadingScreen";
+import { useFetchStatisticsQuery } from "../redux/api/statsApi";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ const Dashboard: React.FC = () => {
   const [isShowRestModal, setIsShowRestModal] = useState(false);
 
   const [toggleBreakMode, { isLoading }] = useToggleBreakModeMutation();
-  const { data: statistics, error } = useFetchStatisticsQuery();
+  const { data: statistics } = useFetchStatisticsQuery();
 
   useEffect(() => {
     if (user) {
@@ -37,7 +38,6 @@ const Dashboard: React.FC = () => {
     setIsShowRestModal(false);
   };
 
-  
   const handleToggleBreakMode = async (checked: boolean) => {
     setIsBreakMode(checked);
     await toggleBreakMode();
@@ -46,8 +46,6 @@ const Dashboard: React.FC = () => {
   if (isLoading) {
     return <LoadingScreen />;
   }
-
-
 
   return (
     <div className="min-h-screen bg-uber-gray-50">
