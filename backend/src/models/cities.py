@@ -12,6 +12,7 @@ from src.models.cancellation_rates import CancellationRates
 class Cities(Model):
     city_id = fields.IntField(pk=True)
     name = fields.CharField(max_length=100)
+    zones = fields.JSONField(null=True)
     earners: fields.ReverseRelation["Earners"]  # Reverse relation to Earners
     merchants: fields.ReverseRelation["Merchants"]  # Reverse relation to Merchants
     weather: fields.ReverseRelation["WeatherDaily"]  # Reverse relation to WeatherDaily
