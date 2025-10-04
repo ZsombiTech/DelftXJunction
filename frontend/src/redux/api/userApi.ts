@@ -100,7 +100,7 @@ export const userApi = createApi({
     getMe: builder.query<User, void>({
       query: () => {
         return {
-          url: "",
+          url: "/",
           method: "GET",
           timeout: 5000,
         };
