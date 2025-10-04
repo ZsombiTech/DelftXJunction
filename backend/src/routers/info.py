@@ -8,6 +8,7 @@ import httpx
 from src.models.incentives_weekly import IncentivesWeekly
 from src.models.incentives_weekly import IncentivesWeekly
 import numpy as np
+from src.models.timeslots import Timeslots
 
 router = APIRouter(prefix="/info", tags=["info"])
 
@@ -53,24 +54,12 @@ async def get_user_info(
     """
     Get current user statistics and earner statistics if applicable
     """
+
+    total_rides = await Timeslots.filter(user_id=current_user.user_id).count()
     user_stats = {
-        "user_id": current_user.user_id,
-        "email": current_user.email
+        "id": current_user.user_id,
+        "total_rides": total_rides
     }
-    # Check if user is also an earner
-    earner = await UsersEarners.get_or_none(user_id=current_user.user_id)
-    if earner:
-        
-        earner_data = await Earners.get_or_none(earner_id=earner.earner_id)
-        earnings_daily = await earner_data.incentives_weekly.all()
-        if earner_data:
-            user_stats["earner"] = {
-                "earner_id": earner_data.earner_id,
-                "rating": earner_data.rating,
-                "earner_type": earner_data.earner_type,
-                "vehicle_type": earner_data.vehicle_type,
-                "totalEarnings": sum(earning.amount for earning in earnings_daily) if earnings_daily else 0.0
-            }
             
     
     return user_stats

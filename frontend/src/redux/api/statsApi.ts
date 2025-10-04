@@ -3,11 +3,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { type RootState } from "../store";
-import { type StatsEarner, type StatsRider } from "../../types";
 
 interface StatisticsResponse {
-  earner: StatsEarner;
-  rider: StatsRider;
+  total_rides: number;
+  user_id: number;
 }
 
 export const statsApi = createApi({

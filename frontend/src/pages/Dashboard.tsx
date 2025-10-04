@@ -6,6 +6,7 @@ import RestAlertModal from "../components/RestAlertModal";
 import BreakModeToggle from "../components/BreakModeToggle";
 import { useToggleBreakModeMutation } from "../redux/api/userApi";
 import LoadingScreen from "../components/LoadingScreen";
+import { useFetchStatisticsQuery } from "../redux/api/statsApi";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ const Dashboard: React.FC = () => {
   const [isShowRestModal, setIsShowRestModal] = useState(false);
 
   const [toggleBreakMode, { isLoading }] = useToggleBreakModeMutation();
-  const statistics = { earner: { totalEarnings: 123.45, rating: 4.78 } };
+  const { data: statistics } = useFetchStatisticsQuery();
 
   useEffect(() => {
     if (user) {
@@ -86,14 +87,7 @@ const Dashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-uber-gray-900 mb-2">
               Earnings
             </h3>
-            <p className="text-3xl font-bold text-uber-black">
-              $
-              {statistics &&
-              statistics?.earner &&
-              statistics?.earner.totalEarnings
-                ? statistics?.earner.totalEarnings?.toFixed(2)
-                : "0.00"}
-            </p>
+            <p className="text-3xl font-bold text-uber-black">$ 0.00</p>
             <p className="text-sm text-uber-gray-500 mt-2">Total earnings</p>
           </div>
 
@@ -101,7 +95,11 @@ const Dashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-uber-gray-900 mb-2">
               Trips
             </h3>
-            <p className="text-3xl font-bold text-uber-black">0</p>
+            <p className="text-3xl font-bold text-uber-black">
+              {statistics && statistics?.total_rides
+                ? statistics?.total_rides?.toFixed(2)
+                : "0.00"}
+            </p>
             <p className="text-sm text-uber-gray-500 mt-2">Completed trips</p>
           </div>
 
@@ -109,11 +107,7 @@ const Dashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-uber-gray-900 mb-2">
               Rating
             </h3>
-            <p className="text-3xl font-bold text-uber-black">
-              {statistics && statistics?.earner && statistics?.earner.rating
-                ? statistics?.earner.rating?.toFixed(2)
-                : "0.00"}
-            </p>
+            <p className="text-3xl font-bold text-uber-black">5.00</p>
             <p className="text-sm text-uber-gray-500 mt-2">Average rating</p>
           </div>
         </div>
