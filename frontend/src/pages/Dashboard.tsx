@@ -88,7 +88,12 @@ const Dashboard: React.FC = () => {
               Earnings
             </h3>
             <p className="text-3xl font-bold text-uber-black">
-              ${statistics?.earner.totalEarnings?.toFixed(2) || "0.00"}
+              $
+              {statistics &&
+              statistics?.earner &&
+              statistics?.earner.totalEarnings
+                ? statistics?.earner.totalEarnings?.toFixed(2)
+                : "0.00"}
             </p>
             <p className="text-sm text-uber-gray-500 mt-2">Total earnings</p>
           </div>
@@ -106,7 +111,9 @@ const Dashboard: React.FC = () => {
               Rating
             </h3>
             <p className="text-3xl font-bold text-uber-black">
-              {statistics?.earner.rating?.toFixed(2) || "0.00"}
+              {statistics && statistics?.earner && statistics?.earner.rating
+                ? statistics?.earner.rating?.toFixed(2)
+                : "0.00"}
             </p>
             <p className="text-sm text-uber-gray-500 mt-2">Average rating</p>
           </div>
