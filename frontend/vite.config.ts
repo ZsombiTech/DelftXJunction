@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "uberlogo.png"], // your icons
       manifest: {
-        name: "Smart Earner - Uber",
-        short_name: "Smart Earner",
+        name: "Uber Auto",
+        short_name: "Uber Auto",
         description: "Your money earning assistant",
         theme_color: "#ffffff",
         icons: [
