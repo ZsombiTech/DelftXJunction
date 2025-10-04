@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from "react";
 import Map, { Source, Layer } from "react-map-gl/mapbox";
 import { heatmapLayer } from "./GeocoderControl";
 import MapControlPanel from "./MapControlPanel";
-import { type Zone } from "../types";
 import { useGetHeatmapZonesQuery } from "../redux/api/zonesApi";
 
 function filterFeaturesByDay(featureCollection: any, time: number) {
