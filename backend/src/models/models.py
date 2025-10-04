@@ -1,8 +1,8 @@
-from tortoise import fields, models
+from tortoise import fields, Model
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 
-class Event(models.Model):
+class Event(Model):
     id = fields.IntField(pk=True)
     name = fields.TextField()
 
