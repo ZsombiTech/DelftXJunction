@@ -52,3 +52,4 @@ python-jose[cryptography]==3.3.0
 bcrypt==4.1.2
 traveltimepy==4.2.0
 shapely==2.1.2
+orjson==3.11.3
