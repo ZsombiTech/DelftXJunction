@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from datetime import timedelta
-from src.schemas.auth import UserRegister, UserLogin, ForgotPassword, Token, RegisterResponse, LoginResponse
+from src.schemas.auth import UserRegister, UserLogin, ForgotPassword, UpdateProfileRequest, RegisterResponse, LoginResponse
 from src.models.users import Users
 from src.utils.security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from src.middleware.auth import get_current_user
@@ -14,6 +14,8 @@ async def get_me(current_user: Users = Depends(get_current_user)):
     return RegisterResponse(
         user_id=current_user.user_id,
         email=current_user.email,
+        firstname=current_user.firstname,
+        lastname=current_user.lastname
     )
 
 
@@ -43,6 +45,8 @@ async def register(user_data: UserRegister):
     return RegisterResponse(
         user_id=user.user_id,
         email=user.email,
+        firstname=user.firstname,
+        lastname=user.lastname
     )
 
 
@@ -77,6 +81,8 @@ async def login(user_credentials: UserLogin):
     user_return = RegisterResponse(
         user_id=user.user_id,
         email=user.email,
+        firstname=user.firstname,
+        lastname=user.lastname
     )
 
     return {"access_token": access_token, "token_type": "bearer", "user": user_return}
@@ -101,18 +107,26 @@ async def forgot_password(forgot_data: ForgotPassword):
     return {"message": "If the email exists, a password reset link has been sent"}
 
 @router.put("/update_profile", response_model=RegisterResponse)
-async def update_profile(firstname: str | None = None, lastname: str | None =
-    None, current_user: Users = Depends(get_current_user)):
-        """Update user profile information"""
-    
-        if firstname is not None:
-            current_user.firstname = firstname
-        if lastname is not None:
-            current_user.lastname = lastname
-    
-        await current_user.save()
-    
-        return RegisterResponse(
-            user_id=current_user.user_id,
-            email=current_user.email,
-        )
+async def update_profile(
+    body: UpdateProfileRequest,
+    current_user: Users = Depends(get_current_user)
+):
+    """Update user profile information"""
+
+    print("Updating profile for user:", current_user.email)
+    print("New firstname:", body.firstname)
+    print("New lastname:", body.lastname)
+        
+    if body.firstname is not None:
+        current_user.firstname = body.firstname
+    if body.lastname is not None:
+        current_user.lastname = body.lastname
+
+    await current_user.save()
+
+    return RegisterResponse(
+        user_id=current_user.user_id,
+        email=current_user.email,
+        firstname=current_user.firstname,
+        lastname=current_user.lastname,
+    )
