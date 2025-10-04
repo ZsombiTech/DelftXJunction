@@ -5,4 +5,6 @@ from .riders import Riders
 from .users import Users
 from .merchants import Merchants
 from .eats_orders import EatsOrders
+from .incentives_weekly import IncentivesWeekly
+from .users_earners import UsersEarners
 
