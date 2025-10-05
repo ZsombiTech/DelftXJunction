@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import Map, { Source, Layer, type MapRef } from "react-map-gl/mapbox";
-import { XIcon, Clock, MapPin, Gauge, User } from "lucide-react"; // Added icons for the panel
+import { XIcon, Clock, MapPin, Gauge, User } from "lucide-react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { CustomLayerInterface } from "mapbox-gl";
@@ -17,16 +17,13 @@ import { enqueueSnackbar } from "notistack";
 
 interface MapPageProps {
   onClose: () => void;
-  start: [number, number]; // [lng, lat]
-  waypoints: [number, number][]; // list of coordinates
-  driverName: string; // Name of the driver
+  start: [number, number];
+  waypoints: [number, number][];
+  driverName: string;
 }
 
 const MAP_TOKEN = import.meta.env.VITE_APP_MAP_TOKEN;
 
-// --- Utility Functions (Same as your original code) ---
-
-// Helper function to calculate bearing (direction of travel)
 const calculateBearing = (
   start: [number, number],
   end: [number, number]
@@ -66,36 +63,29 @@ const create3DCarLayer = (
       camera = new THREE.Camera();
       scene = new THREE.Scene();
 
-      // --- Ultra Bright Lighting Setup (10x lighter look) ---
-      const ambientLight = new THREE.AmbientLight(0xffffff, 10); // huge ambient brightness
+      const ambientLight = new THREE.AmbientLight(0xffffff, 10);
       scene.add(ambientLight);
 
-      // Strong sunlight
       const sunLight = new THREE.DirectionalLight(0xffffff, 12);
       sunLight.position.set(100, 200, 300);
       scene.add(sunLight);
 
-      // Backlight for strong edge glow
       const backLight = new THREE.DirectionalLight(0xffffff, 8);
       backLight.position.set(-150, -100, 150);
       scene.add(backLight);
 
-      // Fill light from the side
       const sideLight = new THREE.DirectionalLight(0xffffff, 6);
       sideLight.position.set(200, 0, 100);
       scene.add(sideLight);
 
-      // Hemisphere for sky–ground glow
       const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 8);
       hemiLight.position.set(0, 300, 0);
       scene.add(hemiLight);
 
-      // Bright local point lights around the car
       const carLight1 = new THREE.PointLight(0xffffff, 10, 200);
       carLight1.position.set(5, 5, 5);
       scene.add(carLight1);
 
-      // Load 3D car model
       const gltfLoader = new GLTFLoader();
       let modelLocation = "/models/car_red.glb";
 
@@ -115,13 +105,12 @@ const create3DCarLayer = (
       renderer = new THREE.WebGLRenderer({
         canvas: map.getCanvas(),
         context: gl,
-        antialias: false, // important for mobile compatibility
+        antialias: false,
         alpha: false,
       });
 
       renderer.autoClear = false;
 
-      // Initial car position
       carPositionRef.current = mapboxgl.MercatorCoordinate.fromLngLat(
         initialCoordinates,
         0
@@ -160,8 +149,6 @@ const create3DCarLayer = (
   };
 };
 
-// --- Main Component ---
-
 const MapPage: React.FC<MapPageProps> = ({
   onClose,
   start,
@@ -169,10 +156,10 @@ const MapPage: React.FC<MapPageProps> = ({
   driverName,
 }) => {
   const [route, setRoute] = useState<GeoJSON.FeatureCollection | null>(null);
-  // Store full route duration and distance from the API response
+
   const [routeInfo, setRouteInfo] = useState<{
-    duration: number; // in seconds
-    distance: number; // in meters
+    duration: number;
+    distance: number;
   } | null>(null);
   const mapRef = useRef<MapRef>(null);
 
@@ -196,7 +183,6 @@ const MapPage: React.FC<MapPageProps> = ({
     ? (route?.features[0]?.geometry as any).coordinates
     : [];
 
-  // 1. Fetch route from Mapbox Directions API
   useEffect(() => {
     if (!start || waypoints.length === 0) return;
     const coords = [start, ...waypoints];
@@ -221,8 +207,8 @@ const MapPage: React.FC<MapPageProps> = ({
         };
         setRoute(routeGeoJSON);
         setRouteInfo({
-          duration: primaryRoute.duration, // total time in seconds
-          distance: primaryRoute.distance, // total distance in meters
+          duration: primaryRoute.duration,
+          distance: primaryRoute.distance,
         });
         positionIndexRef.current = 0;
       }
@@ -230,7 +216,6 @@ const MapPage: React.FC<MapPageProps> = ({
     fetchRoute();
   }, [start, waypoints]);
 
-  // 2. Animate car along route
   const animateNavigation = useCallback(() => {
     const map = mapRef.current?.getMap();
     const coords = routeCoordinates;
@@ -249,18 +234,16 @@ const MapPage: React.FC<MapPageProps> = ({
     }
 
     const nextCoord = coords[index + 1] as [number, number];
-    const t = 0.1; // Animation speed/step size
+    const t = 0.1;
 
     const [lng, lat] = [
       currentLngLat[0] + (nextCoord[0] - currentLngLat[0]) * t,
       currentLngLat[1] + (nextCoord[1] - currentLngLat[1]) * t,
     ];
 
-    // Update bearing
     const newBearing = calculateBearing(currentLngLat, [lng, lat]);
     carBearingRef.current = newBearing;
 
-    // Update car position
     carPositionRef.current = mapboxgl.MercatorCoordinate.fromLngLat(
       [lng, lat],
       0
@@ -281,7 +264,6 @@ const MapPage: React.FC<MapPageProps> = ({
     animationFrameRef.current = requestAnimationFrame(animateNavigation);
   }, [routeCoordinates, currentLngLat]);
 
-  // 3. Start animation when route and map are ready
   useEffect(() => {
     if (routeCoordinates.length > 0 && isMapLoaded) {
       animationFrameRef.current = requestAnimationFrame(animateNavigation);
@@ -292,7 +274,6 @@ const MapPage: React.FC<MapPageProps> = ({
     };
   }, [routeCoordinates, isMapLoaded, animateNavigation]);
 
-  // 4. Map load handler
   const handleMapLoad = useCallback(
     (e: any) => {
       const map = e.target;
@@ -304,7 +285,6 @@ const MapPage: React.FC<MapPageProps> = ({
     [start]
   );
 
-  // 5. Resize map
   useEffect(() => {
     const timer = setTimeout(() => {
       mapRef.current?.resize();
@@ -319,33 +299,26 @@ const MapPage: React.FC<MapPageProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // --- STATISTICAL PANEL LOGIC ---
-
-  // Calculate simulated remaining time and distance (simplified)
   const stats = useMemo(() => {
     if (!routeInfo)
       return {
         remainingTime: "...",
         remainingDistance: "...",
         driverName: driverName,
-        vehicle: "Tesla Model 3", // Placeholder
+        vehicle: "Tesla Model 3",
       };
 
-    // Simulate progress based on the current position index
     const totalPoints = routeCoordinates.length;
     const currentPoints = positionIndexRef.current;
     const progress = totalPoints > 0 ? currentPoints / totalPoints : 0;
 
-    // Estimate remaining distance and time
     const remainingDistanceMeters = routeInfo.distance * (1 - progress);
     const remainingTimeSeconds = routeInfo.duration * (1 - progress);
 
     const distanceKm = (remainingDistanceMeters / 1000).toFixed(1);
 
-    // Convert seconds to 'X min'
     const remainingMinutes = Math.max(1, Math.ceil(remainingTimeSeconds / 60));
 
-    // Calculate Estimated Time of Arrival (ETA)
     const eta = new Date(
       new Date().getTime() + remainingTimeSeconds * 1000
     ).toLocaleTimeString([], {
@@ -363,7 +336,7 @@ const MapPage: React.FC<MapPageProps> = ({
         remainingDistance: "0 km",
         eta,
         driverName: driverName,
-        vehicle: "Tesla Model 3", // Placeholder
+        vehicle: "Tesla Model 3",
       };
     }
 
@@ -372,12 +345,9 @@ const MapPage: React.FC<MapPageProps> = ({
       remainingDistance: `${distanceKm} km`,
       eta,
       driverName: driverName,
-      vehicle: "Tesla Model 3", // Placeholder
+      vehicle: "Tesla Model 3",
     };
   }, [routeInfo, routeCoordinates.length, updateTick, driverName]);
-  // Note: The dependency `positionIndexRef.current` isn't a true dependency
-  // as it's a ref and doesn't trigger a re-render. We'll rely on the
-  // `setCurrentLngLat` state update to trigger the re-render.
 
   const onCloseConfirmationModal = () => {
     setIsCloseModalOpen(false);
@@ -420,7 +390,6 @@ const MapPage: React.FC<MapPageProps> = ({
         </div>
       </Dialog>
 
-      {/* Confirmation Modal for Ending Trip */}
       <Dialog
         open={isCloseModalOpen}
         as="div"
@@ -454,7 +423,7 @@ const MapPage: React.FC<MapPageProps> = ({
                   Continue Trip
                 </Button>
 
-                <Button // Primary action: End Trip (calls original onClose prop)
+                <Button
                   className="cursor-pointer flex-1 rounded-full bg-red-600 py-2 text-sm font-semibold text-white shadow-md transition-colors hover:bg-red-700 focus:outline-none"
                   onClick={onClose}
                 >
@@ -466,12 +435,10 @@ const MapPage: React.FC<MapPageProps> = ({
         </div>
       </Dialog>
 
-      {/* Top Bar for Navigation Instruction */}
       <h1 className="text-xl font-semibold text-center p-4 bg-white/70 backdrop-blur-sm absolute top-0 left-0 right-0 z-20 shadow-md">
         Follow the route
       </h1>
 
-      {/* Close Button */}
       <button
         onClick={() => setIsCloseModalOpen(true)}
         className="cursor-pointer ml-0 xl:ml-4 absolute top-2 left-4 w-10 h-10 bg-black text-white rounded-full z-20 flex items-center justify-center hover:bg-gray-800 transition"
@@ -479,7 +446,6 @@ const MapPage: React.FC<MapPageProps> = ({
         <XIcon className="w-6 h-6" />
       </button>
 
-      {/* Mapbox Map */}
       <Map
         ref={mapRef}
         initialViewState={{
@@ -506,9 +472,7 @@ const MapPage: React.FC<MapPageProps> = ({
         )}
       </Map>
 
-      {/* Statistical Panel (Bottom Right) */}
       <div className="absolute bottom-4 right-4 z-20 w-80 p-4 bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 transition-all duration-300">
-        {/* Header: ETA and Driver */}
         <div className="flex justify-between items-start border-b pb-3 mb-3">
           <div>
             <div className="flex items-center text-3xl font-bold text-gray-900">
@@ -527,9 +491,7 @@ const MapPage: React.FC<MapPageProps> = ({
           </div>
         </div>
 
-        {/* Statistics Grid */}
         <div className="grid grid-cols-2 gap-4 text-sm">
-          {/* Remaining Distance */}
           <div className="flex items-center">
             <MapPin className="w-4 h-4 text-gray-500 mr-2" />
             <div>
@@ -540,7 +502,6 @@ const MapPage: React.FC<MapPageProps> = ({
             </div>
           </div>
 
-          {/* Driver Name (Simulated) */}
           <div className="flex items-center">
             <User className="w-4 h-4 text-gray-500 mr-2" />
             <div>
@@ -549,7 +510,6 @@ const MapPage: React.FC<MapPageProps> = ({
             </div>
           </div>
 
-          {/* Vehicle Info (Simulated) */}
           <div className="flex items-center">
             <Gauge className="w-4 h-4 text-gray-500 mr-2" />
             <div>
@@ -558,7 +518,6 @@ const MapPage: React.FC<MapPageProps> = ({
             </div>
           </div>
 
-          {/* Current Speed (Simulated) */}
           <div className="flex items-center">
             <Clock className="w-4 h-4 text-gray-500 mr-2" />
             <div>
@@ -568,14 +527,13 @@ const MapPage: React.FC<MapPageProps> = ({
           </div>
         </div>
 
-        {/* Action Button */}
         <button
           className="cursor-pointer w-full mt-4 py-2 bg-black text-white rounded-full font-semibold hover:bg-gray-800 transition"
           onClick={() => {
             enqueueSnackbar("Redirecting to emergency services...", {
               variant: "info",
             });
-            window.open("tel:112"); // Opens the phone dialer with emergency number
+            window.open("tel:112");
           }}
         >
           Report emergency

@@ -24,8 +24,6 @@ export const copilotApi = createApi({
       }),
       async onQueryStarted(_, {}) {
         try {
-          // const { data } = await queryFulfilled;
-          // Optionally, you can dispatch actions to store statistics in the Redux state
           // await dispatch(statsSlice.actions.setStatistics(data));
         } catch (error) {
           console.error("Failed to fetch driver stats:", error);

@@ -27,7 +27,6 @@ async def get_events(latitude: float, longitude: float):
             status_code=500, detail="Events API configuration missing")
 
     async with httpx.AsyncClient() as client:
-        # --- Attempt 1: Highly Localized Search ---
         search_query_local = f"events near {latitude},{longitude}"
         params_local = {
             "engine": "google_events",
@@ -42,7 +41,6 @@ async def get_events(latitude: float, longitude: float):
             response.raise_for_status()
             events_data = response.json()
 
-            # Check if there are actual 'events_results'
             if events_data.get("events_results"):
                 print("Local events found.")
                 return {"events": events_data}
@@ -52,20 +50,12 @@ async def get_events(latitude: float, longitude: float):
         except (httpx.RequestError, httpx.HTTPStatusError) as e:
             print(
                 f"Error on local search attempt: {e}. Proceeding to fallback.")
-            # We don't raise an exception yet, we try the fallback.
-
-        # --- Fallback: Broader Search (e.g., using a general term or popular city) ---
-        # The key to a broader search is to drop the specific location from 'q'
-        # or use a known major city name if you can derive one.
-        # For a simple fallback, we'll try 'events' and let the API decide the scope.
+            
         search_query_fallback = "popular events in the Netherlands"
         params_fallback = {
             "engine": "google_events",
             "q": search_query_fallback,
             "api_key": EVENTS_API_KEY
-            # Optionally, you could add a 'location' parameter if you could
-            # reverse geocode the lat/lon to a city/region, but for a
-            # general fallback, 'popular events' is a simple start.
         }
 
         print(f"Attempting fallback search with params: {params_fallback}")
@@ -79,7 +69,6 @@ async def get_events(latitude: float, longitude: float):
                 print("Fallback events found.")
                 return {"events": events_data_fallback}
 
-            # If the fallback still returns nothing, we raise an error.
             print("Fallback search also returned no events.")
             raise HTTPException(
                 status_code=404, detail="No events found locally or broadly.")
@@ -97,26 +86,21 @@ async def get_user_info(
     current_user: Users = Depends(get_current_user)
 ):
     try:
-        # Get the earner associated with this user
         user_earner = await UsersEarners.filter(user_id=current_user.user_id).first()
 
         if not user_earner:
             raise HTTPException(
                 status_code=404, detail="Driver profile not found")
 
-        # Get earner details
         earner = await Earners.get(earner_id=user_earner.earner_id)
 
-        # Get all trips for this driver
         trips = await RidesTrips.filter(driver_id=earner.earner_id).all()
 
-        # Calculate statistics
         total_trips = len(trips)
         total_earnings = sum(trip.net_earnings or 0 for trip in trips)
         total_distance = sum(trip.distance_km or 0 for trip in trips)
         total_duration = sum(trip.duration_mins or 0 for trip in trips)
-
-        # Format trips data
+  
         trips_data = [
             DriverTripData(
                 ride_id=trip.ride_id,

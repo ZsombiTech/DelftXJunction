@@ -3,11 +3,11 @@ import { useScheduleQuery } from "../redux/api/timeslotApi";
 import LoadingScreen from "../components/LoadingScreen";
 
 export type Timeslot = {
-  time: string; // e.g., "07.00 - 08.00"
+  time: string;
   activity: string;
   instructor: string;
-  duration: number; // Duration in hours, e.g., 1 for an hour class
-  color: string; // Tailwind color class for a subtle highlight
+  duration: number;
+  color: string;
 };
 
 export type DaySchedule = {
@@ -15,16 +15,9 @@ export type DaySchedule = {
   slots: Timeslot[];
 };
 
-// --- Components ---
-
-/**
- * Renders a single class timeslot.
- * It uses the 'duration' property to visually adjust height (for desktop view).
- */
 const TimeslotCard: React.FC<{ slot: Timeslot }> = ({ slot }) => {
-  // Calculate a proportional height for desktop view (e.g., 8 units per hour)
   const heightStyle = {
-    height: `${slot.duration * 4}rem`, // 4rem per hour (adjust as needed)
+    height: `${slot.duration * 4}rem`,
     minHeight: "4rem",
   };
 
@@ -44,9 +37,6 @@ const TimeslotCard: React.FC<{ slot: Timeslot }> = ({ slot }) => {
   );
 };
 
-/**
- * Renders the daily schedule for mobile view (vertical list of cards).
- */
 const DailyScheduleMobile: React.FC<{ day: string; slots: Timeslot[] }> = ({
   day,
   slots,
@@ -68,9 +58,6 @@ const DailyScheduleMobile: React.FC<{ day: string; slots: Timeslot[] }> = ({
     </div>
   </div>
 );
-
-// --- Main Timetable Component ---
-
 export default function Timetable() {
   const { data: timetableData, isLoading } = useScheduleQuery();
 
@@ -78,9 +65,6 @@ export default function Timetable() {
     return <LoadingScreen />;
   }
 
-  console.log(timetableData);
-
-  // Extract all unique time boundaries to create the time column header
   const allTimeSlots = [
     "07.00",
     "08.00",
@@ -117,7 +101,6 @@ export default function Timetable() {
         </p>
       </header>
 
-      {/* --- Mobile View (Default) --- */}
       <div className="md:hidden space-y-4">
         {timetableData!.map((daySchedule) => (
           <DailyScheduleMobile
@@ -128,16 +111,13 @@ export default function Timetable() {
         ))}
       </div>
 
-      {/* --- Desktop View (md breakpoint) --- */}
       <div className="hidden md:block bg-white rounded-xl shadow-xl overflow-x-auto">
-        {/* Timetable Grid */}
         <div
           className="min-w-full grid border-b border-gray-200"
           style={{
             gridTemplateColumns: `70px repeat(${timetableData!.length}, 1fr)`,
           }}
         >
-          {/* Day Headers */}
           <div className="sticky left-0 z-10 bg-gray-100 p-3 font-semibold text-center text-sm text-gray-800 border-r border-gray-200">
             Time
           </div>
@@ -150,10 +130,8 @@ export default function Timetable() {
             </div>
           ))}
 
-          {/* Time & Slot Rows */}
           {timeLabels.map((timeLabel, timeIndex) => (
             <React.Fragment key={timeIndex}>
-              {/* Time Column (Sticky) */}
               <div
                 className="sticky left-0 z-10 p-2 text-center text-xs font-medium text-gray-600 bg-white border-r border-gray-200 border-b flex items-start justify-center"
                 style={{ height: "4rem" }}
@@ -161,7 +139,6 @@ export default function Timetable() {
                 {timeLabel.start}
               </div>
 
-              {/* Day Columns */}
               {timetableData!.map((daySchedule, dayIndex) => {
                 const slotsInThisHour = daySchedule.slots.filter((slot) => {
                   const [startHour] = slot.time
@@ -170,7 +147,6 @@ export default function Timetable() {
                     .map(Number);
                   const [labelHour] = timeLabel.start.split(":").map(Number);
 
-                  // Check if the class starts within this hour block
                   return startHour === labelHour;
                 });
 
@@ -178,9 +154,8 @@ export default function Timetable() {
                   <div
                     key={dayIndex}
                     className="p-1 border-b border-gray-200 border-r last:border-r-0 min-h-[4rem]"
-                    style={{ position: "relative" }} // For absolute positioning of slots
+                    style={{ position: "relative" }}
                   >
-                    {/* Render the slot card at the start of its time block */}
                     {slotsInThisHour.map((slot, slotIndex) => (
                       <div
                         key={slotIndex}
@@ -191,7 +166,6 @@ export default function Timetable() {
                       </div>
                     ))}
 
-                    {/* Spacer for visual row structure */}
                     {!slotsInThisHour.length && <div className="h-full"></div>}
                   </div>
                 );

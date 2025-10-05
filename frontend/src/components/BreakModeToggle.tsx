@@ -12,7 +12,6 @@ const BreakModeToggle: React.FC<BreakModeToggleProps> = ({
   return (
     <div className="flex items-center space-x-6">
       <div className="flex items-center space-x-2">
-        {/* Icon (Pause/Break) */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className={`h-10 w-10 transition-colors ${
@@ -23,7 +22,6 @@ const BreakModeToggle: React.FC<BreakModeToggleProps> = ({
           stroke="currentColor"
           strokeWidth={2}
         >
-          {/* Simple Pause/Break Icon */}
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -31,13 +29,11 @@ const BreakModeToggle: React.FC<BreakModeToggleProps> = ({
           />
         </svg>
 
-        {/* Label */}
         <span className="text-base font-medium text-uber-gray-900">
           Break mode
         </span>
       </div>
 
-      {/* Toggle Switch */}
       <label
         htmlFor="break-mode-toggle"
         className="relative inline-flex items-center cursor-pointer"
@@ -49,7 +45,7 @@ const BreakModeToggle: React.FC<BreakModeToggleProps> = ({
           checked={isChecked}
           onChange={(e) => onToggle(e.target.checked)}
         />
-        {/* Toggle Track and Thumb */}
+
         <div
           className={`w-11 h-6 rounded-full peer 
             peer-focus:ring-2 peer-focus:ring-blue-300 

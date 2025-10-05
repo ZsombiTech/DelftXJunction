@@ -12,46 +12,34 @@ export default function MapViewer() {
     null
   );
 
+  const { data: zones } = useGetHeatmapZonesQuery();
+
   useEffect(() => {
-    /* global fetch */
     fetch("https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson")
       .then((resp) => resp.json())
       .then((json) => {
-        // Note: In a real application you would do a validation of JSON data before doing anything with it,
-        // but for demonstration purposes we ingore this part here and just trying to select needed data...
-
         setEarthQuakes(json);
       })
       .catch((err) => console.error("Could not load data", err));
   }, []);
 
-  const { data: zones } = useGetHeatmapZonesQuery();
-  console.log(useGetHeatmapZonesQuery());
   useEffect(() => {
     if (!zones) return;
 
-    // Build proper MultiPolygon coordinates from backend format.
-    // backend: zone.zones is Array<Array<{ shell, holes }>>
-    // We'll turn every inner "part" (object with shell and holes) into a Polygon (array of rings),
-    // then collect them into a MultiPolygon (array of polygons).
     const zonesToDisplay: GeoJSON.Feature[] = zones.map((zone) => {
-      // flatten all parts into polygons
-      const polygons: GeoJSON.Position[][][] = zone.zones
-        .flat() // bring all part objects to one array
-        .map((part) => {
-          // each part.shell is an exterior ring (array of [lng, lat])
-          const rings: GeoJSON.Position[][] = [];
-          if (part.shell && part.shell.length) {
-            rings.push(part.shell as unknown as GeoJSON.Position[]);
-          }
-          // append any holes (each is a ring)
-          if (part.holes && part.holes.length) {
-            part.holes.forEach((h) =>
-              rings.push(h as unknown as GeoJSON.Position[])
-            );
-          }
-          return rings;
-        });
+      const polygons: GeoJSON.Position[][][] = zone.zones.flat().map((part) => {
+        const rings: GeoJSON.Position[][] = [];
+        if (part.shell && part.shell.length) {
+          rings.push(part.shell as unknown as GeoJSON.Position[]);
+        }
+
+        if (part.holes && part.holes.length) {
+          part.holes.forEach((h) =>
+            rings.push(h as unknown as GeoJSON.Position[])
+          );
+        }
+        return rings;
+      });
 
       return {
         type: "Feature",

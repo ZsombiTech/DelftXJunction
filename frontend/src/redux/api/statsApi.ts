@@ -55,7 +55,6 @@ export const statsApi = createApi({
       }),
       async onQueryStarted(_, {}) {
         try {
-          // Optionally, you can dispatch actions to store statistics in the Redux state
           // await dispatch(statsSlice.actions.setStatistics(data));
         } catch (error) {
           console.error("Failed to fetch statistics:", error);
@@ -73,7 +72,6 @@ export const statsApi = createApi({
       }),
       async onQueryStarted(_, {}) {
         try {
-          // Optionally, you can dispatch actions to store statistics in the Redux state
           // await dispatch(statsSlice.actions.setStatistics(data));
         } catch (error) {
           console.error("Failed to fetch events:", error);

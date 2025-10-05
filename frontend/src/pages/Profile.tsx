@@ -38,7 +38,6 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-uber-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-uber-black">Profile</h1>
@@ -56,19 +55,15 @@ export default function Profile() {
           </button>
         </div>
 
-        {/* Profile Card */}
         <div className="bg-uber-white rounded-lg shadow-sm border border-uber-gray-200">
           <form onSubmit={handleSubmit} className="p-6 sm:p-8">
-            {/* Success Message */}
             {successMessage && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-800">{successMessage}</p>
               </div>
             )}
 
-            {/* Form Fields */}
             <div className="space-y-6">
-              {/* First Name */}
               <div>
                 <label
                   htmlFor="firstname"
@@ -86,7 +81,6 @@ export default function Profile() {
                 />
               </div>
 
-              {/* Last Name */}
               <div>
                 <label
                   htmlFor="lastname"
@@ -104,7 +98,6 @@ export default function Profile() {
                 />
               </div>
 
-              {/* Email (Disabled) */}
               <div>
                 <label
                   htmlFor="email"
@@ -121,7 +114,6 @@ export default function Profile() {
                 />
               </div>
 
-              {/* Password (Disabled) */}
               <div>
                 <label
                   htmlFor="password"
@@ -139,7 +131,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <div className="mt-8">
               <button
                 type="submit"
@@ -152,7 +143,6 @@ export default function Profile() {
           </form>
         </div>
 
-        {/* Additional Info */}
         <div className="mt-6 text-center">
           <p className="text-sm text-uber-gray-500">
             Need to change your email or password?{" "}

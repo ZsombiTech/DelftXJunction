@@ -25,7 +25,6 @@ const DemandPredictor: React.FC = () => {
     const fetchData = async (lat: number, lon: number) => {
       setLoading(true);
       try {
-        // Fetch weather data
         const weatherRes = await axios.get(WEATHER_API_URL, {
           params: {
             latitude: lat,
@@ -36,7 +35,6 @@ const DemandPredictor: React.FC = () => {
         });
         setWeather(weatherRes.data.current_weather);
 
-        // Fetch events data
         const eventsRes = await fetchEvents({
           latitude: lat,
           longitude: lon,
@@ -53,7 +51,6 @@ const DemandPredictor: React.FC = () => {
       }
     };
 
-    // Get user's current position
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {

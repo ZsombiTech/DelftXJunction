@@ -8,16 +8,11 @@ router = APIRouter(prefix="/timeslots", tags=["timeslots"])
 
 @router.get("/schedule")
 async def get_weekly_schedule():
-    """
-    Return all timeslots grouped by weekday, in the same structured format.
-    """
-    # Fetch all timeslots from the database
     timeslots = await Timeslots.all().order_by("start_time")
 
     if not timeslots:
         return []
-
-    # Create day name mapping
+    
     day_map = {
         0: "Monday",
         1: "Tuesday",
@@ -28,17 +23,12 @@ async def get_weekly_schedule():
         6: "Sunday",
     }
 
-    # Helper to format times
     def fmt_time(dt):
         return dt.strftime("%H:%M")
 
     schedule_by_day = {}
 
     for t in timeslots:
-        # Convert UTC to local time if needed (optional)
-        # tz = pytz.timezone("Europe/Amsterdam")
-        # start = t.start_time.astimezone(tz)
-        # end = t.end_time.astimezone(tz) if t.end_time else None
         start = t.start_time
         end = t.end_time
 
@@ -46,7 +36,6 @@ async def get_weekly_schedule():
         if day_name not in schedule_by_day:
             schedule_by_day[day_name] = []
 
-        # Calculate duration in hours
         if end:
             duration = round((end - start).total_seconds() / 3600, 2)
         else:
@@ -54,7 +43,7 @@ async def get_weekly_schedule():
 
         slot = {
             "time": f"{fmt_time(start)} - {fmt_time(end) if end else '—'}",
-            "activity": "Driving Session",  # Placeholder (you can replace with t.activity if you add such a field)
+            "activity": "Driving Session", 
             "instructor": "Customer",
             "duration": duration,
             "color": "bg-indigo-600/10 text-indigo-800" if t.is_active else "bg-gray-600/10 text-gray-800",
@@ -62,7 +51,6 @@ async def get_weekly_schedule():
 
         schedule_by_day[day_name].append(slot)
 
-    # Convert to list format
     formatted_schedule = [
         {"day": day, "slots": slots}
         for day, slots in sorted(schedule_by_day.items(), key=lambda x: list(day_map.values()).index(x[0]))
@@ -73,10 +61,6 @@ async def get_weekly_schedule():
 
 @router.post("/start")
 async def start_timeslot(current_user: Users = Depends(get_current_user)):
-    """
-    Create a new timeslot when user clicks the Earn button
-    """
-    # Check if user already has an active timeslot
     active_timeslot = await Timeslots.filter(
         user_id=current_user.user_id,
         is_active=True
@@ -85,7 +69,6 @@ async def start_timeslot(current_user: Users = Depends(get_current_user)):
     if active_timeslot:
         raise HTTPException(status_code=400, detail="User already has an active timeslot")
 
-    # Create new timeslot
     timeslot = await Timeslots.create(
         user_id=current_user.user_id,
         is_active=True
@@ -101,10 +84,6 @@ async def start_timeslot(current_user: Users = Depends(get_current_user)):
 
 @router.post("/end/{timeslot_id}")
 async def end_timeslot(timeslot_id: int, current_user: Users = Depends(get_current_user)):
-    """
-    Close a timeslot when handleClose() is called
-    """
-    # Find the timeslot
     timeslot = await Timeslots.filter(
         timeslot_id=timeslot_id,
         user_id=current_user.user_id,
@@ -114,7 +93,7 @@ async def end_timeslot(timeslot_id: int, current_user: Users = Depends(get_curre
     if not timeslot:
         raise HTTPException(status_code=404, detail="Active timeslot not found")
 
-    # Update the timeslot
+
     timeslot.end_time = datetime.utcnow()
     timeslot.is_active = False
     await timeslot.save()
@@ -130,9 +109,6 @@ async def end_timeslot(timeslot_id: int, current_user: Users = Depends(get_curre
 
 @router.get("/active")
 async def get_active_timeslot(current_user: Users = Depends(get_current_user)):
-    """
-    Get the current active timeslot for the user
-    """
     timeslot = await Timeslots.filter(
         user_id=current_user.user_id,
         is_active=True

@@ -11,13 +11,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 async def should_user_rest(user_id: int) -> bool:
-    """
-    Check if user should rest based on timeslots in the past 3 hours.
-    Returns True if user has more than 3 timeslots in the past 3 hours.
-    """
     three_hours_ago = datetime.now() - timedelta(hours=3)
 
-    # Count timeslots from the past 3 hours for this user
     timeslot_count = await Timeslots.filter(
         user_id=user_id,
         start_time__gte=three_hours_ago
@@ -28,7 +23,6 @@ async def should_user_rest(user_id: int) -> bool:
 
 @router.get("/", response_model=RegisterResponse)
 async def get_me(current_user: Users = Depends(get_current_user)):
-    """Get current authenticated user"""
     is_rest_now = await should_user_rest(current_user.user_id)
 
     return RegisterResponse(
@@ -43,9 +37,6 @@ async def get_me(current_user: Users = Depends(get_current_user)):
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegister):
-    """Register a new user"""
-
-    # Check if email already exists
     existing_email = await Users.filter(email=user_data.email).first()
     if existing_email:
         raise HTTPException(
@@ -53,10 +44,8 @@ async def register(user_data: UserRegister):
             detail="Email already registered"
         )
 
-    # Hash the password
     hashed_password = get_password_hash(user_data.password)
 
-    # Create new user
     user = await Users.create(
         email=user_data.email,
         password=hashed_password,
@@ -73,15 +62,13 @@ async def register(user_data: UserRegister):
         firstname=user.firstname,
         lastname=user.lastname,
         isRestNow=False,
-        isBreakMode=False  # Default value; adjust as needed
+        isBreakMode=False 
     )
 
 @router.post("/toggle_break_mode", response_model=RegisterResponse)
 async def toggle_break_mode(
     current_user: Users = Depends(get_current_user)
 ):
-    """Toggle the user's break mode status"""
-
     current_user.isBreakMode = not current_user.isBreakMode
     await current_user.save()
 
@@ -99,9 +86,6 @@ async def toggle_break_mode(
 
 @router.post("/login", response_model=LoginResponse)
 async def login(user_credentials: UserLogin):
-    """Login user and return JWT token"""
-
-    # Find user by email
     user = await Users.filter(email=user_credentials.email).first()
 
     if not user:
@@ -111,7 +95,6 @@ async def login(user_credentials: UserLogin):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Verify password
     if not verify_password(user_credentials.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -119,7 +102,6 @@ async def login(user_credentials: UserLogin):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email, "user_id": user.user_id},
@@ -142,19 +124,11 @@ async def login(user_credentials: UserLogin):
 
 @router.post("/change_password", status_code=status.HTTP_200_OK)
 async def forgot_password(forgot_data: ForgotPassword):
-    """Forgot password endpoint (logic not implemented)"""
 
-    # Check if email exists
     user = await Users.filter(email=forgot_data.email).first()
 
     if not user:
-        # Return success anyway to avoid email enumeration
         return {"message": "If the email exists, a password reset link has been sent"}
-
-    # TODO: Implement password reset logic
-    # - Generate reset token
-    # - Send email with reset link
-    # - Store token with expiration
 
     return {"message": "If the email exists, a password reset link has been sent"}
 
@@ -164,11 +138,6 @@ async def update_profile(
     body: UpdateProfileRequest,
     current_user: Users = Depends(get_current_user)
 ):
-    """Update user profile information"""
-
-    print("Updating profile for user:", current_user.email)
-    print("New firstname:", body.firstname)
-    print("New lastname:", body.lastname)
 
     if body.firstname is not None:
         current_user.firstname = body.firstname

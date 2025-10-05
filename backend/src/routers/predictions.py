@@ -13,12 +13,10 @@ progress_counter = 0
 
 
 def eval_state(zones, drivers):
-    # Placeholder for state evaluation logic
     return 0
 
 
 def get_state_hash(drivers):
-    """Generate a hash representation of the current driver state"""
     state_data = []
     for driver in drivers:
         state_data.append({
@@ -27,7 +25,6 @@ def get_state_hash(drivers):
             'destination_zone': getattr(driver, 'destination_zone', None)
         })
 
-    # Sort by driver ID for consistent hashing
     state_data.sort(key=lambda x: x['id'])
     state_str = json.dumps(state_data, sort_keys=True)
     return hashlib.md5(state_str.encode()).hexdigest()
@@ -40,10 +37,9 @@ def sss_function(zones, drivers, max_depth, depth, cost, time_of_day, visited_st
     if visited_states is None:
         visited_states = set()
 
-    # Generate state hash for cycle detection
     state_hash = get_state_hash(drivers)
     if state_hash in visited_states:
-        return -sys.maxsize - 1, 0  # Return worst score for revisited states
+        return -sys.maxsize - 1, 0 
 
     visited_states.add(state_hash)
 
@@ -54,7 +50,6 @@ def sss_function(zones, drivers, max_depth, depth, cost, time_of_day, visited_st
     best_score = -sys.maxsize - 1
     best_cost = cost
 
-    # Calculate possible actions
     possible_actions = []
     for driver in drivers:
         if driver.status == "online" and driver.destination_zone is None:
@@ -67,7 +62,6 @@ def sss_function(zones, drivers, max_depth, depth, cost, time_of_day, visited_st
     for action in possible_actions:
         driver_id, target_zone = action
 
-        # Create new state by copying and modifying
         new_drivers = copy.deepcopy(drivers)
         for driver in new_drivers:
             if driver.earner_id == driver_id:
@@ -76,7 +70,6 @@ def sss_function(zones, drivers, max_depth, depth, cost, time_of_day, visited_st
 
         new_cost = cost + 1
 
-        # Recursive call with copied state and visited states
         new_score, recursive_cost = sss_function(
             zones, new_drivers, max_depth, depth + 1, new_cost, time_of_day, visited_states.copy())
 
@@ -99,8 +92,7 @@ async def state_space_search(city_id: int, max_depth: int):
 
     logger.info(
         f"Starting state space search in city {city.name} with max depth {max_depth}")
-
-    # Perform state space search using city and depth
+    
     zones = city.zones
 
     drivers = await Earners.filter(home_city_id=city_id, earner_type="driver").all()
@@ -110,7 +102,6 @@ async def state_space_search(city_id: int, max_depth: int):
     global progress_counter
     progress_counter = 0
 
-    # current time of day
     time_of_day = datetime.now().hour * 3600 + datetime.now().minute * \
         60 + datetime.now().second
 

@@ -32,7 +32,6 @@ const ForgotPassword: React.FC = () => {
   return (
     <div className="min-h-screen bg-uber-black flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo/Title */}
         <div className="text-center mb-8">
           <img
             src={UberLogo}
@@ -45,7 +44,6 @@ const ForgotPassword: React.FC = () => {
           </h1>
         </div>
 
-        {/* Forgot Password Form */}
         <div className="bg-uber-white rounded-lg shadow-lg p-8">
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-uber-gray-900 mb-2">

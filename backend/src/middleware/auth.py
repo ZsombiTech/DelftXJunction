@@ -7,11 +7,6 @@ security = HTTPBearer()
 
 
 async def get_current_user(request: Request):
-    """
-    Authentication middleware that extracts and validates JWT token
-    and adds user object to request state
-    """
-    # Get Authorization header
     authorization: str = request.headers.get("Authorization")
 
     if not authorization:
@@ -21,7 +16,6 @@ async def get_current_user(request: Request):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Extract token from "Bearer <token>"
     try:
         scheme, token = authorization.split()
         if scheme.lower() != "bearer":
@@ -37,7 +31,6 @@ async def get_current_user(request: Request):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Decode token
     payload = decode_access_token(token)
     if payload is None:
         raise HTTPException(
@@ -46,7 +39,6 @@ async def get_current_user(request: Request):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Get user from database
     user_id = payload.get("user_id")
     if user_id is None:
         raise HTTPException(
