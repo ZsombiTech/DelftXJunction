@@ -68,9 +68,24 @@ def point_in_zone(point, zone: ZoneFormat):
     return False
 
 # Check if a point is inside or within a certain distance of a zone
+
+
 def point_near_zone(point, zone: ZoneFormat, distance: float = 0.0005):
     point_geom = Point(point[1], point[0])  # lng, lat for Shapely
     for shape in zone:
+        # Quick bounding box check first (much faster than contains/distance)
+        shell_coords = shape["shell"]
+        min_x = min(coord[0] for coord in shell_coords)
+        max_x = max(coord[0] for coord in shell_coords)
+        min_y = min(coord[1] for coord in shell_coords)
+        max_y = max(coord[1] for coord in shell_coords)
+
+        # Check if point is outside bounding box + distance buffer
+        if (point[1] < min_x - distance or point[1] > max_x + distance or
+                point[0] < min_y - distance or point[0] > max_y + distance):
+            continue
+
+        # Only do expensive polygon operations if bounding box check passes
         polygon = Polygon(shape["shell"], holes=shape["holes"])
         if polygon.contains(point_geom) or polygon.distance(point_geom) < distance:
             return True
@@ -211,7 +226,7 @@ def get_travel_time(origin, destination, start_time):
                 departure_location_id="origin",
                 arrival_location_ids=["destination"],
                 travel_time=3600,  # 1 hour max travel time in seconds
-                departure_time=datetime.now() + timedelta(seconds=start_time),
+                departure_time=start_time,
                 transportation=Driving(),
                 properties=["travel_time"]
             )

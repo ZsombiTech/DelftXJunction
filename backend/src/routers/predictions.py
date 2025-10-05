@@ -10,10 +10,193 @@ from src.models import Cities, Earners
 from datetime import datetime, timedelta
 from shapely.geometry import Polygon, MultiPolygon
 import random
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+from itertools import combinations, product
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
 
 progress_counter = 0
+
+
+@dataclass
+class DriverState:
+    """Lightweight driver state representation"""
+    earner_id: str
+    status: str
+    latitude: float
+    longitude: float
+    current_zone: Optional[int] = None
+    destination_zone: Optional[int] = None
+
+
+@dataclass
+class Action:
+    """Represents a single driver action"""
+    driver_id: str
+    from_zone: Optional[int]
+    to_zone: int
+    cost: float
+    time: datetime
+
+
+@dataclass
+class ActionBatch:
+    """Represents multiple simultaneous actions in one time step"""
+    actions: List[Action]
+    total_cost: float
+    time: datetime
+
+
+@dataclass
+class GameState:
+    """Immutable game state representation"""
+    driver_assignments: Dict[str, Optional[int]
+                             ]  # driver_id -> destination_zone
+    time: datetime
+
+    def copy_with_assignment(self, driver_id: str, zone_id: Optional[int]) -> 'GameState':
+        """Create new state with single driver assignment change"""
+        new_assignments = self.driver_assignments.copy()
+        new_assignments[driver_id] = zone_id
+        return GameState(new_assignments, self.time)
+
+
+@dataclass
+class SearchResult:
+    """Result of state space search including optimal actions"""
+    score: float
+    cost: float
+    optimal_action_batches: List[ActionBatch]
+
+
+# Global cache for zone centroids and distances
+zone_centroids_cache: Dict[int, Tuple[float, float]] = {}
+zone_distance_cache: Dict[Tuple[int, int], float] = {}
+driver_zone_cache: Dict[str, int] = {}
+# min_x, max_x, min_y, max_y
+zone_bboxes_cache: Dict[int, Tuple[float, float, float, float]] = {}
+
+
+def precompute_zone_centroids(zones):
+    """Pre-compute zone centroids and bounding boxes for faster distance calculations"""
+    global zone_centroids_cache, zone_bboxes_cache
+    zone_centroids_cache.clear()
+    zone_bboxes_cache.clear()
+
+    for zone_id, zone in enumerate(zones):
+        zone_shapes = [Polygon(shape["shell"], holes=shape["holes"])
+                       for shape in zone]
+        zone_multipolygon = MultiPolygon(zone_shapes)
+        centroid = zone_multipolygon.centroid
+        zone_centroids_cache[zone_id] = (centroid.y, centroid.x)  # lat, lng
+
+        # Pre-compute bounding box for fast spatial queries
+        bounds = zone_multipolygon.bounds  # (minx, miny, maxx, maxy)
+        zone_bboxes_cache[zone_id] = bounds
+
+    logger.info(
+        f"Pre-computed centroids and bounding boxes for {len(zone_centroids_cache)} zones")
+
+
+def get_driver_zone_optimized(driver_lat: float, driver_lng: float, zones) -> Optional[int]:
+    """Optimized zone lookup with bounding box checks and caching"""
+    # Create cache key based on rounded coordinates
+    cache_key = f"{round(driver_lat, 5)},{round(driver_lng, 5)}"
+
+    if cache_key in driver_zone_cache:
+        return driver_zone_cache[cache_key]
+
+    # Use bounding box for fast elimination before expensive geometric operations
+    for zone_id in range(len(zones)):
+        if zone_id in zone_bboxes_cache:
+            minx, miny, maxx, maxy = zone_bboxes_cache[zone_id]
+            # Quick bounding box check (lng=x, lat=y)
+            if not (minx <= driver_lng <= maxx and miny <= driver_lat <= maxy):
+                continue
+
+        # Only do expensive point_near_zone check if bounding box passes
+        if point_near_zone([driver_lat, driver_lng], zones[zone_id], 0.01):
+            driver_zone_cache[cache_key] = zone_id
+            return zone_id
+
+    driver_zone_cache[cache_key] = None
+    return None
+
+
+def precompute_zone_distances(zones, time):
+    """Pre-compute travel times between all zone centroids"""
+    global zone_distance_cache
+    zone_distance_cache.clear()
+
+    for i in range(len(zones)):
+        for j in range(len(zones)):
+            if i != j and (i, j) not in zone_distance_cache:
+                origin = zone_centroids_cache[i]
+                destination = zone_centroids_cache[j]
+                travel_time = get_travel_time(origin, destination, time)
+                zone_distance_cache[(i, j)] = travel_time
+
+    logger.info(
+        f"Pre-computed {len(zone_distance_cache)} zone-to-zone distances")
+
+
+def generate_action_combinations(drivers, zones, time, max_simultaneous_actions=3):
+    """Generate all possible combinations of driver actions for one time step"""
+
+    # Get all idle drivers
+    idle_drivers = [driver for driver in drivers
+                    if driver.status == "online" and driver.destination_zone is None]
+
+    # Generate individual actions for each driver
+    all_individual_actions = []
+    for driver in idle_drivers:
+        driver_zone = get_driver_zone_optimized(
+            driver.latitude, driver.longitude, zones)
+
+        for zone_id in range(len(zones)):
+            if zone_id != driver_zone:  # Don't move to same zone
+                # Calculate cost for this action
+                if driver_zone is not None and (driver_zone, zone_id) in zone_distance_cache:
+                    cost = zone_distance_cache[(driver_zone, zone_id)]
+                else:
+                    zone_centroid = zone_centroids_cache.get(zone_id)
+                    if zone_centroid:
+                        cost = get_travel_time([driver.latitude, driver.longitude],
+                                               list(zone_centroid), time)
+                    else:
+                        cost = 3600  # Default high cost
+
+                action = Action(
+                    driver_id=driver.earner_id,
+                    from_zone=driver_zone,
+                    to_zone=zone_id,
+                    cost=cost,
+                    time=time
+                )
+                all_individual_actions.append(action)
+
+    # Generate action batches (combinations of simultaneous actions)
+    action_batches = []
+
+    # Add empty action (do nothing)
+    action_batches.append(ActionBatch(actions=[], total_cost=0, time=time))
+
+    # Generate combinations of 1 to max_simultaneous_actions
+    for num_actions in range(1, min(max_simultaneous_actions + 1, len(idle_drivers) + 1)):
+        for action_combo in combinations(all_individual_actions, num_actions):
+            # Check that no driver appears twice in the combination
+            driver_ids = [action.driver_id for action in action_combo]
+            if len(driver_ids) == len(set(driver_ids)):  # No duplicates
+                total_cost = sum(action.cost for action in action_combo)
+                batch = ActionBatch(
+                    actions=list(action_combo),
+                    total_cost=total_cost,
+                    time=time
+                )
+                action_batches.append(batch)
+
+    return action_batches
 
 
 def eval_state(zones, drivers, time, timeframe_count: int = 3) -> float:
@@ -24,14 +207,10 @@ def eval_state(zones, drivers, time, timeframe_count: int = 3) -> float:
     for driver in drivers:
         if driver.status == "online" and driver.destination_zone is None:
             # Driver is idle, count them in the zone
-
-            # Get drivers zone from location
-            for index, zone in enumerate(zones):
-                if point_near_zone([driver.latitude, driver.longitude], zone, 0.01):
-                    current_driver_zone = index
-                    break
-
-            drivers_in_zones[current_driver_zone] += 1
+            current_driver_zone = get_driver_zone_optimized(
+                driver.latitude, driver.longitude, zones)
+            if current_driver_zone is not None:
+                drivers_in_zones[current_driver_zone] += 1
 
     # Get density for current weekday/time and next few intervals
     zone_density = []
@@ -63,11 +242,11 @@ def eval_state(zones, drivers, time, timeframe_count: int = 3) -> float:
             current_zone_density = 0
 
         if driver_count == current_zone_density:
-            score += driver_count
+            score += driver_count * 3
         elif driver_count > current_zone_density:
             score += driver_count
-            if driver_count > 1.3 * current_zone_density:
-                score -= (driver_count - 1.3 * current_zone_density)
+            if driver_count > 2 * current_zone_density:
+                score -= (driver_count - 2 * current_zone_density)
         else:  # driver_count < current_zone_density
             score -= (current_zone_density - driver_count)
 
@@ -75,8 +254,17 @@ def eval_state(zones, drivers, time, timeframe_count: int = 3) -> float:
     return score
 
 
+def get_state_hash_optimized(game_state: GameState) -> str:
+    """Generate optimized hash for game state"""
+    # Create a tuple of sorted (driver_id, destination_zone) pairs
+    sorted_assignments = tuple(sorted(game_state.driver_assignments.items()))
+    # Create hash from assignments and time
+    hash_input = f"{sorted_assignments}:{game_state.time}"
+    return hashlib.md5(hash_input.encode()).hexdigest()
+
+
 def get_state_hash(drivers, time):
-    """Generate a hash representation of the current driver state"""
+    """Legacy hash function for compatibility"""
     state_data = []
     for driver in drivers:
         # logger.info(
@@ -93,7 +281,7 @@ def get_state_hash(drivers, time):
     return hashlib.md5(state_str.encode()).hexdigest()
 
 
-def sss_function(zones, drivers, max_depth, depth, cost, time, visited_states=None):
+def sss_function(zones, drivers, max_depth, depth, cost, time, visited_states=None, max_simultaneous_actions=3):
     global progress_counter
     progress_counter += 1
 
@@ -106,7 +294,7 @@ def sss_function(zones, drivers, max_depth, depth, cost, time, visited_states=No
     state_hash = get_state_hash(drivers, time)
     # logger.debug(f"State hash at depth {depth}: {state_hash}")
     if state_hash in visited_states:
-        return -sys.maxsize - 1, 0
+        return -sys.maxsize - 1, 0, []
 
     visited_states.add(state_hash)
 
@@ -114,56 +302,57 @@ def sss_function(zones, drivers, max_depth, depth, cost, time, visited_states=No
         # logger.info(f"Reached max depth {max_depth}, evaluating state")
         current_time = datetime.now()
         score = eval_state(zones, drivers, current_time)
-        return score, cost
+        return score, cost, []
 
     best_score = -sys.maxsize - 1
     best_cost = sys.maxsize
+    best_action_batches = []
 
-    possible_actions = []
+    # Generate all possible action combinations for this time step
+    action_batches = generate_action_combinations(
+        drivers, zones, time, max_simultaneous_actions)
 
-    for driver in drivers:
-        if driver.status == "online" and driver.destination_zone is None:
-            for index, zone in enumerate(zones):
-                possible_actions.append([driver, index])
+    if not action_batches:
+        # No actions possible, advance time
+        result = sss_function(zones, drivers, max_depth, depth + 1,
+                              cost, time + timedelta(minutes=10), visited_states.copy(), max_simultaneous_actions)
+        return result
 
-    if not possible_actions:
-        return sss_function(zones, drivers, max_depth, depth + 1, cost, time + timedelta(minutes=10), visited_states.copy())
-
-    for action in possible_actions:
-        driver, target_zone_id = action
-
+    for action_batch in action_batches:
+        # Apply all actions in the batch to create new state
         new_drivers = copy.deepcopy(drivers)
-        for driver in new_drivers:
-            if driver.earner_id == driver:
-                driver.destination_zone = target_zone_id
-                break
 
-        # Create multypolygon from zone shapes
-        zone_shapes = [Polygon(shape["shell"], holes=shape["holes"])
-                       for shape in zones[target_zone_id]]
-        zone_multipolygon = MultiPolygon(zone_shapes)
+        # Apply each action in the batch
+        for action in action_batch.actions:
+            for new_driver in new_drivers:
+                if new_driver.earner_id == action.driver_id:
+                    new_driver.destination_zone = action.to_zone
+                    break
 
-        new_cost = get_travel_time([driver.latitude, driver.longitude],
-                                   [zone_multipolygon.centroid.y, zone_multipolygon.centroid.x], time)
+        # Recursive call with the new state
+        recursive_score, recursive_cost, recursive_batches = sss_function(
+            zones, new_drivers, max_depth, depth + 1,
+            action_batch.total_cost, time + timedelta(minutes=10), visited_states.copy(), max_simultaneous_actions)
 
-        # Recursive call with copied state and visited states
-        recursive_score, recursive_cost = sss_function(
-            zones, new_drivers, max_depth, depth + 1, new_cost, time + timedelta(minutes=10), visited_states.copy())
-
-        total_cost = new_cost + recursive_cost
+        total_cost = action_batch.total_cost + recursive_cost
 
         # Subtract cost from score to balance exploration vs exploitation
-        adjusted_score = recursive_score - total_cost  # Cost factor can be tuned
+        adjusted_score = recursive_score - total_cost / 3600  # Cost factor can be tuned
+
+        if len(action_batch.actions) > 0:  # Only log for non-empty batches
+            logger.info(
+                f"Batch with {len(action_batch.actions)} actions: score={recursive_score}, cost={total_cost / 3600:.2f}")
 
         if adjusted_score > best_score or (adjusted_score == best_score and total_cost < best_cost):
             best_score = adjusted_score
             best_cost = total_cost
+            best_action_batches = [action_batch] + recursive_batches
 
-    return best_score, best_cost
+    return best_score, best_cost, best_action_batches
 
 
 @router.post("/state-space-search")
-async def state_space_search(city_id: int, max_depth: int, custom_time: datetime = None):
+async def state_space_search(city_id: int, max_depth: int, custom_time: datetime = None, max_simultaneous_actions: int = 3):
     logger.info(
         f"Received state space search request for city_id={city_id}, max_depth={max_depth}")
 
@@ -180,6 +369,9 @@ async def state_space_search(city_id: int, max_depth: int, custom_time: datetime
 
     # Initialize zone density cache at the start of SSS request
     initialize_zone_density_cache(densities_initialized, True)
+
+    # Pre-compute zone centroids for performance optimization
+    precompute_zone_centroids(zones)
 
     drivers = await Earners.filter(home_city_id=city_id, earner_type="driver").all()
 
@@ -215,7 +407,53 @@ async def state_space_search(city_id: int, max_depth: int, custom_time: datetime
         time = custom_time
         logger.info(f"Using custom time: {time}")
 
-    cost, score = sss_function(
-        zones, copy.deepcopy(drivers[:10]), max_depth, 0, cost, time)
+    # Pre-compute zone-to-zone travel times for performance optimization
+    logger.info("Pre-computing zone distances...")
+    precompute_zone_distances(zones, time)
 
-    return {"message": "State space search completed", "cost": cost, "score": score}
+    score, cost, optimal_action_batches = sss_function(
+        zones, copy.deepcopy(drivers[:10]), max_depth, 0, cost, time, None, max_simultaneous_actions)
+
+    # Convert action batches to serializable format
+    batches_data = []
+    all_actions = []
+
+    for batch in optimal_action_batches:
+        batch_actions = []
+        for action in batch.actions:
+            action_data = {
+                "driver_id": action.driver_id,
+                "from_zone": action.from_zone,
+                "to_zone": action.to_zone,
+                "cost": action.cost,
+                "time": action.time.isoformat()
+            }
+            batch_actions.append(action_data)
+            all_actions.append(action)
+
+        batches_data.append({
+            "time_step": batch.time.isoformat(),
+            "actions": batch_actions,
+            "batch_cost": batch.total_cost,
+            "action_count": len(batch_actions)
+        })
+
+    # Calculate metrics for RL training
+    total_travel_cost = sum(action.cost for action in all_actions)
+    unique_drivers = len(set(action.driver_id for action in all_actions))
+    total_actions = len(all_actions)
+
+    return {
+        "message": "State space search completed",
+        "cost": cost,
+        "score": score,
+        "optimal_action_batches": batches_data,
+        "total_time_steps": len(batches_data),
+        "total_actions": total_actions,
+        "total_travel_cost": total_travel_cost,
+        "unique_drivers_moved": unique_drivers,
+        "avg_cost_per_action": total_travel_cost / total_actions if total_actions > 0 else 0,
+        "avg_actions_per_time_step": total_actions / len(batches_data) if batches_data else 0,
+        "search_depth": max_depth,
+        "explored_states": progress_counter
+    }
