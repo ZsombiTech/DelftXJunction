@@ -145,7 +145,7 @@ const AICopilot: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-uber-gray-50">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="bg-uber-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center gap-3">
