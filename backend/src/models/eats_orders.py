@@ -43,9 +43,7 @@ class EatsOrders(Model):
     date = fields.DateField(null=True)
 
     class Meta:
+        app = "models"
         table = "eats_orders"
-
-    def __str__(self):
-        return self.name
 
 EventSchema = pydantic_model_creator(EatsOrders)

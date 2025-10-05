@@ -13,6 +13,5 @@ async def get_heatmap_zones():
     Get heatmap zones for the current user
     """
     zones = await Cities.all().values("name", "zones")
-    logger.info(f"Fetching heatmap zones for user: {zones}")
     # Fetch heatmap zones logic here
     return zones

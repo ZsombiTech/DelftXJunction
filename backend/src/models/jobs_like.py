@@ -44,3 +44,5 @@ class JobsLike(Model):
     class Meta:
         app = "models"
         table = "jobs_like"
+
+EventSchema = pydantic_model_creator(JobsLike)
