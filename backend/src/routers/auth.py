@@ -5,6 +5,7 @@ from src.models.users import Users
 from src.utils.security import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from src.middleware.auth import get_current_user
 from src.models.timeslots import Timeslots
+from src.models.users_earners import UsersEarners
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -62,6 +63,9 @@ async def register(user_data: UserRegister):
         firstname=user_data.firstname,
         lastname=user_data.lastname
     )
+
+    some_earner_id = f"E1000{user.user_id}"
+    await UsersEarners.create(user_id=user.user_id, earner_id=some_earner_id)
 
     return RegisterResponse(
         user_id=user.user_id,
