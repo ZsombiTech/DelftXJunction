@@ -9,6 +9,7 @@ from src.routers import predictions
 from src.routers import heatmap
 from src.utils.logger import logger
 from src.routers import admin
+from src.routers import copilot
 
 
 def create_application() -> FastAPI:
@@ -20,6 +21,7 @@ def create_application() -> FastAPI:
     application.include_router(predictions.router)
     application.include_router(heatmap.router)
     application.include_router(admin.router)
+    application.include_router(copilot.router)
     return application
 
 

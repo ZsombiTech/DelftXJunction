@@ -5,6 +5,7 @@ import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
 import Timetable from "../pages/Timetable";
 import EventPredicter from "../pages/EventPredicter";
+import AICopilot from "../pages/AICopilot";
 
 export const PrivateRoutes: FC = () => {
   return (
@@ -13,6 +14,7 @@ export const PrivateRoutes: FC = () => {
         <Route path="/eventpredicter" element={<EventPredicter />} />
         <Route path="/timetable" element={<Timetable />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/copilot" element={<AICopilot />} />
         <Route path="/" element={<Dashboard />} />
 
         <Route path="*" element={<Dashboard />} />

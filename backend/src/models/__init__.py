@@ -9,3 +9,4 @@ from .eats_orders import EatsOrders
 from .incentives_weekly import IncentivesWeekly
 from .users_earners import UsersEarners
 from .timeslots import Timeslots
+from .rides_trips import RidesTrips

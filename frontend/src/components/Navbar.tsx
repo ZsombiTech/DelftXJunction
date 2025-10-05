@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, UserPen, HandCoins, Menu, X } from "lucide-react";
+import { Calendar, UserPen, HandCoins, Menu, X, Bot } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -39,6 +39,14 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             <div
               className="flex items-center space-x-2 cursor-pointer"
+              onClick={() => navigate("/copilot")}
+            >
+              <Bot className="h-6 w-6 text-uber-white" />
+              <p className="font-medium">AI Copilot</p>
+            </div>
+            <div className="w-px h-6 bg-uber-gray-700" />
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
               onClick={() => navigate("/eventpredicter")}
             >
               <HandCoins className="h-6 w-6 text-uber-white" />
@@ -73,6 +81,17 @@ export default function Navbar() {
       {/* Mobile dropdown menu */}
       {isOpen && (
         <div className="md:hidden bg-uber-black border-t border-uber-gray-800 flex flex-col space-y-4 py-4 px-6">
+          <div
+            className="flex items-center space-x-2 cursor-pointer"
+            onClick={() => {
+              navigate("/copilot");
+              setIsOpen(false);
+            }}
+          >
+            <Bot className="h-6 w-6 text-uber-white" />
+            <p className="font-medium">AI Copilot</p>
+          </div>
+
           <div
             className="flex items-center space-x-2 cursor-pointer"
             onClick={() => {

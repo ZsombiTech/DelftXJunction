@@ -87,7 +87,12 @@ const Dashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-uber-gray-900 mb-2">
               Earnings
             </h3>
-            <p className="text-3xl font-bold text-uber-black">$ 0.00</p>
+            <p className="text-3xl font-bold text-uber-black">
+              ${" "}
+              {statistics && statistics?.total_earnings
+                ? statistics?.total_earnings?.toFixed(2)
+                : "0.00"}
+            </p>
             <p className="text-sm text-uber-gray-500 mt-2">Total earnings</p>
           </div>
 
@@ -96,8 +101,8 @@ const Dashboard: React.FC = () => {
               Trips
             </h3>
             <p className="text-3xl font-bold text-uber-black">
-              {statistics && statistics?.total_rides
-                ? statistics?.total_rides?.toFixed(2)
+              {statistics && statistics?.total_trips
+                ? statistics?.total_trips?.toFixed(2)
                 : "0.00"}
             </p>
             <p className="text-sm text-uber-gray-500 mt-2">Completed trips</p>
@@ -107,12 +112,16 @@ const Dashboard: React.FC = () => {
             <h3 className="text-lg font-semibold text-uber-gray-900 mb-2">
               Rating
             </h3>
-            <p className="text-3xl font-bold text-uber-black">5.00</p>
+            <p className="text-3xl font-bold text-uber-black">
+              {statistics && statistics?.average_rating
+                ? statistics?.average_rating?.toFixed(2)
+                : "0.00"}
+            </p>
             <p className="text-sm text-uber-gray-500 mt-2">Average rating</p>
           </div>
         </div>
 
-        <div className="h-96 mt-6 rounded-lg overflow-hidden shadow-md">
+        <div className="h-[100vh] mt-6 rounded-lg overflow-hidden shadow-md">
           <MapViewer />
         </div>
       </main>

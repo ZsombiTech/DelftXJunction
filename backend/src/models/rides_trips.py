@@ -3,20 +3,23 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 
 class RidesTrips(Model):
     ride_id = fields.TextField(pk=True)
-    driver_id = fields.ForeignKeyField(
+    driver = fields.ForeignKeyField(
         "models.Earners",
         related_name="rides_trips",
         null=False,
+        column_name="driver_id",
     )
-    rider_id = fields.ForeignKeyField(
+    rider = fields.ForeignKeyField(
         "models.Riders",
         related_name="rides_trips",
         null=False,
+        column_name="rider_id",
     )
-    city_id = fields.ForeignKeyField(
+    city = fields.ForeignKeyField(
         "models.Cities",
         related_name="rides_trips",
         null=True,
+        column_name="city_id",
     )
     product = fields.CharField(max_length=100, null=True)
     vehicle_type = fields.CharField(max_length=50, null=True)
@@ -38,3 +41,9 @@ class RidesTrips(Model):
     tips = fields.FloatField(null=True)
     payment_type = fields.CharField(max_length=50, null=True)
     date = fields.DateField(null=True)
+
+    class Meta:
+        app = "models"
+        table = "rides_trips"
+
+RidesTripsSchema = pydantic_model_creator(RidesTrips)
