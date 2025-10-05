@@ -29,11 +29,9 @@ const AICopilot: React.FC = () => {
     useDriverStatsMutation();
 
   useEffect(() => {
-    // Get the last message
-    const lastMessage = messages[messages.length - 1]; // Check if it's an assistant message and not a loading state
+    const lastMessage = messages[messages.length - 1];
 
     if (lastMessage && lastMessage.role === "assistant" && !isLoading) {
-      // Check if the browser supports Speech Synthesis
       if ("speechSynthesis" in window) {
         const utterance = new SpeechSynthesisUtterance(lastMessage.content);
         const voices = window.speechSynthesis.getVoices();
@@ -44,8 +42,7 @@ const AICopilot: React.FC = () => {
       } else {
         console.warn("Speech Synthesis not supported by this browser.");
       }
-    } // We only want this to run when the `messages` array updates.
-    // The 'isLoading' dependency helps ensure we speak only after loading is complete for a message.
+    }
   }, [messages, isLoading]);
 
   useEffect(() => {
@@ -80,7 +77,6 @@ const AICopilot: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -99,7 +95,6 @@ const AICopilot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Convert messages to ChatGPT format
       const conversationHistory: ChatMessage[] = messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -146,7 +141,6 @@ const AICopilot: React.FC = () => {
   return (
     <div className="min-h-screen bg-uber-gray-50">
       <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="bg-uber-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-uber-black rounded-full flex items-center justify-center">
@@ -163,7 +157,6 @@ const AICopilot: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Overview */}
         {driverStats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-uber-white rounded-lg shadow-sm p-4">
@@ -193,12 +186,10 @@ const AICopilot: React.FC = () => {
           </div>
         )}
 
-        {/* Chat Container */}
         <div
           className="bg-uber-white rounded-lg shadow-md overflow-hidden flex flex-col"
           style={{ height: "calc(100vh - 200px)" }}
         >
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((message) => (
               <div
@@ -207,7 +198,6 @@ const AICopilot: React.FC = () => {
                   message.role === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
               >
-                {/* Avatar */}
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     message.role === "user"
@@ -222,7 +212,6 @@ const AICopilot: React.FC = () => {
                   )}
                 </div>
 
-                {/* Message bubble */}
                 <div
                   className={`max-w-[70%] rounded-2xl px-4 py-3 ${
                     message.role === "user"
@@ -263,7 +252,6 @@ const AICopilot: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
           <div className="border-t border-uber-gray-200 p-4">
             <div className="flex gap-3">
               <input

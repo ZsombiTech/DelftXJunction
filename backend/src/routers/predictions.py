@@ -87,7 +87,6 @@ def get_state_hash(drivers, time):
             'destination_zone': getattr(driver, 'destination_zone', None)
         })
 
-    # Sort by driver ID for consistent hashing
     state_data.sort(key=lambda x: x['id'])
     state_str = json.dumps(state_data, sort_keys=True)
     state_str += f":{time}"
@@ -107,7 +106,7 @@ def sss_function(zones, drivers, max_depth, depth, cost, time, visited_states=No
     state_hash = get_state_hash(drivers, time)
     # logger.debug(f"State hash at depth {depth}: {state_hash}")
     if state_hash in visited_states:
-        return -sys.maxsize - 1, 0  # Return worst score for revisited states
+        return -sys.maxsize - 1, 0
 
     visited_states.add(state_hash)
 
@@ -120,7 +119,6 @@ def sss_function(zones, drivers, max_depth, depth, cost, time, visited_states=No
     best_score = -sys.maxsize - 1
     best_cost = sys.maxsize
 
-    # Calculate possible actions
     possible_actions = []
 
     for driver in drivers:
@@ -134,7 +132,6 @@ def sss_function(zones, drivers, max_depth, depth, cost, time, visited_states=No
     for action in possible_actions:
         driver, target_zone_id = action
 
-        # Create new state by copying and modifying
         new_drivers = copy.deepcopy(drivers)
         for driver in new_drivers:
             if driver.earner_id == driver:
@@ -177,7 +174,6 @@ async def state_space_search(city_id: int, max_depth: int, custom_time: datetime
     logger.info(
         f"Starting state space search in city {city.name} with max depth {max_depth}")
 
-    # Perform state space search using city and depth
     zones = city.zones
 
     densities_initialized = city.zone_densities

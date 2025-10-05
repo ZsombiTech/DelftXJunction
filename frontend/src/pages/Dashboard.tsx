@@ -63,7 +63,6 @@ const Dashboard: React.FC = () => {
               <h2 className="text-3xl font-semibold text-uber-gray-900 mb-4">
                 Welcome!
               </h2>
-              {/* Flex container for the welcome text and the new toggle */}
 
               <p className="text-uber-gray-600">
                 You are logged in as:{" "}
@@ -73,7 +72,6 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
 
-            {/* The new Break Mode Toggle component */}
             <BreakModeToggle
               isChecked={isBreakMode}
               onToggle={handleToggleBreakMode}

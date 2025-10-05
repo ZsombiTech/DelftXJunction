@@ -34,7 +34,6 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-uber-black flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo/Title */}
         <div className="text-center mb-8">
           <img
             src={UberLogo}
@@ -46,7 +45,6 @@ const Login: React.FC = () => {
           <p className="text-uber-gray-400">Sign in to continue</p>
         </div>
 
-        {/* Login Form */}
         <div className="bg-uber-white rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (

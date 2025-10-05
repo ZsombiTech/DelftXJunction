@@ -18,22 +18,17 @@ def reprint(something):
 
 def generate_zones(pickup_points: list[JobsLike], seconds: int, min_interval_minutes: int):
     zones: list[ZoneFormat] = []
-    densities: list[dict[str, int | list[tuple[float, float]]]] = [] # { time: 999, pickups: [ pickup points for each zone ] } for each time interval
+    densities: list[dict[str, int | list[tuple[float, float]]]] = [] 
 
-    # This shall only be run when densities is not empty
     def add_pickup(time: datetime, zone_index: int):
-        # Search for the closest time interval
         for i, density in enumerate(densities):
             start = datetime.fromtimestamp(density["time"], tz=UTC)
-            if start <= time and time < start + timedelta(minutes=min_interval_minutes): # interval: [start, start + min_interval_minutes)
-                # Ensure the pickups list is long enough
+            if start <= time and time < start + timedelta(minutes=min_interval_minutes):
                 if len(densities[i]["pickups"]) <= zone_index:
                     densities[i]["pickups"].extend([0] * (zone_index + 1 - len(densities[i]["pickups"])))
                 densities[i]["pickups"][zone_index] += 1
                 return
 
-        # If no interval is found, create a new one
-        # Round down to the nearest interval boundary
         time_minutes = int(time.timestamp()) // 60
         interval_start_minutes = (time_minutes // min_interval_minutes) * min_interval_minutes
         new_interval_time = datetime.fromtimestamp(interval_start_minutes * 60, tz=UTC)
@@ -44,7 +39,7 @@ def generate_zones(pickup_points: list[JobsLike], seconds: int, min_interval_min
     for i, pickup_point in enumerate(pickup_points):
         reprint(i)
         point = (pickup_point.begin_checkpoint_actual_location_latitude, pickup_point.begin_checkpoint_actual_location_longitude)
-        # Check if the point is in an existing zone
+
         near_zone_index = -1
         for j, zone in enumerate(zones):
             reprint(f"{i} ({j}, {len(zone[0]["shell"])})")
@@ -52,15 +47,13 @@ def generate_zones(pickup_points: list[JobsLike], seconds: int, min_interval_min
                 near_zone_index = j
                 break
         if near_zone_index != -1:
-            # We're not creating a new zone, but we're adding the point to the density
             add_pickup(pickup_point.begin_checkpoint_ata_utc, near_zone_index)
             continue
         
         reprint(f"{i} ...       ")
         new_zone = get_zone(point[0], point[1], seconds)
-        new_zone = cut_zone_with_others(new_zone, zones) # Cut existing zones out from the new one
+        new_zone = cut_zone_with_others(new_zone, zones)
         
-        # If the zone has bodies, add it to the zones
         if len(new_zone) > 0:
             zones.append(new_zone)
             if len(densities) == 0:

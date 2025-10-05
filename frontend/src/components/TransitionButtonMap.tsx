@@ -9,17 +9,12 @@ import {
 } from "../redux/api/timeslotApi";
 import LoadingScreen from "./LoadingScreen";
 
-// Define the dimensions and position based on Tailwind classes
-// w-16 = 64px, h-16 = 64px
-// bottom-8 = 32px, right-8 = 32px
 const BUTTON_INITIAL_DIMENSIONS = {
   width: 64,
   height: 64,
-  borderRadius: 9999, // rounded-full
-
-  // We define the position relative to the viewport (fixed)
-  bottom: 32, // The fixed 'bottom-8' value in pixels
-  right: 32, // The fixed 'right-8' value in pixels
+  borderRadius: 9999,
+  bottom: 32,
+  right: 32,
 };
 
 const TransitionButton: React.FC = () => {
@@ -35,7 +30,6 @@ const TransitionButton: React.FC = () => {
 
   const handleEarnClick = async () => {
     if (user?.isBreakMode) {
-      // If in break mode, do nothing on click
       return;
     }
     try {
@@ -68,32 +62,24 @@ const TransitionButton: React.FC = () => {
   return (
     <AnimatePresence>
       {isExpanded ? (
-        // --- Expanded Map View ---
         <motion.div
           key="map-container"
-          // We apply the final (expanded) screen classes here
           className="fixed z-[999] bg-white"
           initial={{
-            // START STATE: Use the exact button dimensions and position
             width: BUTTON_INITIAL_DIMENSIONS.width,
             height: BUTTON_INITIAL_DIMENSIONS.height,
             bottom: BUTTON_INITIAL_DIMENSIONS.bottom,
             right: BUTTON_INITIAL_DIMENSIONS.right,
             borderRadius: BUTTON_INITIAL_DIMENSIONS.borderRadius,
-            // Framer Motion handles the 'fixed' positioning, but we ensure
-            // the initial calculated position is correct.
           }}
           animate={{
-            // END STATE: Animate to cover the whole screen
             width: "100vw",
             height: "100vh",
             bottom: 0,
             right: 0,
-            borderRadius: 0, // No border radius when full screen
+            borderRadius: 0,
           }}
           exit={{
-            // EXIT STATE: Animate back to the button's position and size
-            // when the map is closed.
             width: BUTTON_INITIAL_DIMENSIONS.width,
             height: BUTTON_INITIAL_DIMENSIONS.height,
             bottom: BUTTON_INITIAL_DIMENSIONS.bottom,
@@ -102,25 +88,23 @@ const TransitionButton: React.FC = () => {
           }}
           transition={{
             duration: 0.6,
-            ease: [0.4, 0, 0.2, 1], // Smooth cubic-bezier
+            ease: [0.4, 0, 0.2, 1],
           }}
           onAnimationComplete={() => {
-            // Trigger a resize event to ensure the map adjusts properly
             window.dispatchEvent(new Event("resize"));
           }}
         >
           <MapPage
             onClose={handleClose}
-            start={[4.895168, 52.370216]} // Amsterdam
+            start={[4.895168, 52.370216]}
             waypoints={[
-              [4.9041, 52.3676], // some coordinates in Amsterdam
-              [4.9141, 52.365], // another destination
+              [4.9041, 52.3676],
+              [4.9141, 52.365],
             ]}
-            driverName={`${user?.firstname || "Driver"} ${user?.lastname}`} // Pass the user's name or a default
+            driverName={`${user?.firstname || "Driver"} ${user?.lastname}`}
           />
         </motion.div>
       ) : (
-        // --- Initial "Earn" Button ---
         <motion.button
           key="earn-button"
           onClick={handleEarnClick}
@@ -131,7 +115,6 @@ const TransitionButton: React.FC = () => {
             shadow-xl transition-transform duration-300
             ${user?.isBreakMode ? "bg-gray-400 cursor-not-allowed" : "hover:scale-105 cursor-pointer"}
           `}
-          // The button fades out as the map expands
           initial={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
         >
