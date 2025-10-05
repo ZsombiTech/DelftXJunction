@@ -14,6 +14,7 @@ class Cities(Model):
     city_id = fields.IntField(pk=True)
     name = fields.CharField(max_length=100)
     zones = fields.JSONField(null=True)  # ZoneFormat (in ml/data.py)
+    zone_densities = fields.JSONField(null=True)  # [{ time: 999, pickups: [ pickup points for each zone ] } for each time interval]
     earners: fields.ReverseRelation["Earners"]  # Reverse relation to Earners
     # Reverse relation to Merchants
     merchants: fields.ReverseRelation["Merchants"]

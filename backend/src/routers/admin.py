@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from datetime import timedelta
+from datetime import UTC, timedelta, datetime
 import orjson as json
 
 from pydantic import BaseModel
 from src.models.jobs_like import JobsLike
-from src.ml.data import cut_zone_with_others, get_zone, point_in_zone
+from src.ml.data import ZoneFormat, cut_zone_with_others, get_zone, point_near_zone
 from src.models.cities import Cities
 from src.schemas.auth import UserRegister, UserLogin, ForgotPassword, Token, RegisterResponse, LoginResponse
 from src.models.users import Users
@@ -12,28 +12,48 @@ from src.models.users import Users
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
-class UpdateCityZonesRequest(BaseModel):
-    seconds: int
-
 def reprint(something):
     print("\033[F", end="")
     print(something)
 
-def generate_zones(pickup_points: list[JobsLike], seconds: int):
-    zones = []
+def generate_zones(pickup_points: list[JobsLike], seconds: int, min_interval_minutes: int):
+    zones: list[ZoneFormat] = []
+    densities: list[dict[str, int | list[tuple[float, float]]]] = [] # { time: 999, pickups: [ pickup points for each zone ] } for each time interval
+
+    # This shall only be run when densities is not empty
+    def add_pickup(time: datetime, zone_index: int):
+        # Search for the closest time interval
+        for i, density in enumerate(densities):
+            start = datetime.fromtimestamp(density["time"], tz=UTC)
+            if start <= time and time < start + timedelta(minutes=min_interval_minutes): # interval: [start, start + min_interval_minutes)
+                # Ensure the pickups list is long enough
+                if len(densities[i]["pickups"]) <= zone_index:
+                    densities[i]["pickups"].extend([0] * (zone_index + 1 - len(densities[i]["pickups"])))
+                densities[i]["pickups"][zone_index] += 1
+                return
+
+        # If no interval is found, create a new one
+        # Round down to the nearest interval boundary
+        time_minutes = int(time.timestamp()) // 60
+        interval_start_minutes = (time_minutes // min_interval_minutes) * min_interval_minutes
+        new_interval_time = datetime.fromtimestamp(interval_start_minutes * 60, tz=UTC)
+        densities.append({ "time": int(new_interval_time.timestamp()), "pickups": [0] * zone_index + [1] })
+
     print() # Empty line
 
     for i, pickup_point in enumerate(pickup_points):
         reprint(i)
         point = (pickup_point.begin_checkpoint_actual_location_latitude, pickup_point.begin_checkpoint_actual_location_longitude)
         # Check if the point is in an existing zone
-        should_continue = False
+        near_zone_index = -1
         for j, zone in enumerate(zones):
             reprint(f"{i} ({j}, {len(zone[0]["shell"])})")
-            if point_in_zone(point, zone):
-                should_continue = True
+            if point_near_zone(point, zone):
+                near_zone_index = j
                 break
-        if should_continue:
+        if near_zone_index != -1:
+            # We're not creating a new zone, but we're adding the point to the density
+            add_pickup(pickup_point.begin_checkpoint_ata_utc, near_zone_index)
             continue
         
         reprint(f"{i} ...       ")
@@ -43,9 +63,19 @@ def generate_zones(pickup_points: list[JobsLike], seconds: int):
         # If the zone has bodies, add it to the zones
         if len(new_zone) > 0:
             zones.append(new_zone)
-    
-    return zones
+            if len(densities) == 0:
+                densities.append({ "time": int(pickup_point.begin_checkpoint_ata_utc.timestamp()), "pickups": [0] * (len(zones) - 1) + [1] })
+            else:
+                add_pickup(pickup_point.begin_checkpoint_ata_utc, len(zones) - 1)
 
+    
+    return zones, densities
+
+
+
+class UpdateCityZonesRequest(BaseModel):
+    seconds: int = 360 # 6 minutes
+    min_interval_minutes: int = 30
 
 @router.post("/update_city_zones", status_code=status.HTTP_201_CREATED)
 async def update_city_zones(request: UpdateCityZonesRequest):
@@ -56,8 +86,9 @@ async def update_city_zones(request: UpdateCityZonesRequest):
 
         all_pickup_points = await city.jobs_like_begin.all()
         print(f"{len(all_pickup_points)} pickup points")
-        zones = generate_zones(all_pickup_points, request.seconds)
+        zones, densities = generate_zones(all_pickup_points, request.seconds, request.min_interval_minutes)
         city.zones = json.dumps(zones)
+        city.zone_densities = json.dumps(densities)
         await city.save()
 
 

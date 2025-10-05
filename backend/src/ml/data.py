@@ -45,6 +45,15 @@ def point_in_zone(point, zone: ZoneFormat):
 
     return False
 
+# Check if a point is inside or within a certain distance of a zone
+def point_near_zone(point, zone: ZoneFormat, distance: float = 0.0005):
+    point_geom = Point(point[1], point[0])  # lng, lat for Shapely
+    for shape in zone:
+        polygon = Polygon(shape["shell"], holes=shape["holes"])
+        if polygon.contains(point_geom) or polygon.distance(point_geom) < distance:
+            return True
+    return False
+
 
 def cut_zone_with_others(zone: ZoneFormat, others: list[ZoneFormat]):
     # Cut others from each shape
