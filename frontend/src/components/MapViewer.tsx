@@ -5,34 +5,7 @@ import { heatmapLayer } from "./GeocoderControl";
 import MapControlPanel from "./MapControlPanel";
 import { useGetHeatmapZonesQuery } from "../redux/api/zonesApi";
 
-function filterFeaturesByDay(featureCollection: any, time: number) {
-  if (!featureCollection || !featureCollection.features) {
-    return { type: "FeatureCollection", features: [] };
-  }
-
-  const date = new Date(time);
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const day = date.getDate();
-
-  const features = featureCollection.features.filter((feature: any) => {
-    const featureTime = feature?.properties?.time;
-    if (!featureTime) return false;
-    const featureDate = new Date(featureTime);
-    return (
-      featureDate.getFullYear() === year &&
-      featureDate.getMonth() === month &&
-      featureDate.getDate() === day
-    );
-  });
-
-  return { type: "FeatureCollection", features };
-}
-
 export default function MapViewer() {
-  const [allDays, setAllDays] = useState(true);
-  const [timeRange, setTimeRange] = useState([0, 0]);
-  const [selectedTime, selectTime] = useState(0);
   const [earthquakes, setEarthQuakes] =
     useState<GeoJSON.FeatureCollection | null>(null);
   const [merchants, setMerchants] = useState<GeoJSON.FeatureCollection | null>(
@@ -46,13 +19,8 @@ export default function MapViewer() {
       .then((json) => {
         // Note: In a real application you would do a validation of JSON data before doing anything with it,
         // but for demonstration purposes we ingore this part here and just trying to select needed data...
-        const features = json.features;
-        const endTime = features[0].properties.time;
-        const startTime = features[features.length - 1].properties.time;
 
-        setTimeRange([startTime, endTime]);
         setEarthQuakes(json);
-        selectTime(endTime);
       })
       .catch((err) => console.error("Could not load data", err));
   }, []);
@@ -104,10 +72,8 @@ export default function MapViewer() {
   }, [zones]);
 
   const data = useMemo(() => {
-    return allDays
-      ? earthquakes
-      : filterFeaturesByDay(earthquakes, selectedTime);
-  }, [earthquakes, allDays, selectedTime]);
+    return earthquakes;
+  }, [earthquakes]);
 
   return (
     <div className="relative h-full">
@@ -150,14 +116,7 @@ export default function MapViewer() {
           </Source>
         )}
       </Map>
-      <MapControlPanel
-        startTime={timeRange[0]}
-        endTime={timeRange[1]}
-        selectedTime={selectedTime}
-        allDays={allDays}
-        onChangeTime={selectTime}
-        onChangeAllDays={setAllDays}
-      />
+      <MapControlPanel />
     </div>
   );
 }
