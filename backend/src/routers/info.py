@@ -2,13 +2,12 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from src.models.users import Users
 from src.models.users_earners import UsersEarners
 from src.middleware.auth import get_current_user
-from src.models.earners import Earners
 import os
 import httpx
 from src.models.incentives_weekly import IncentivesWeekly
-from src.models.incentives_weekly import IncentivesWeekly
-import numpy as np
 from src.models.timeslots import Timeslots
+
+from src.utils.logger import logger
 
 router = APIRouter(prefix="/info", tags=["info"])
 
@@ -90,11 +89,24 @@ async def get_user_info(
     """
     Get current user statistics and earner statistics if applicable
     """
+    # Find the UsersEarners mapping for this user and extract earner_id
+    user_earner = await UsersEarners.filter(user_id=current_user.user_id).first()
+    earner_id = user_earner.earner_id if user_earner else None
+
+    # If we have an earner_id, aggregate the bonus_eur directly in the DB
+    if earner_id:
+        total_earnings = await IncentivesWeekly.filter(earner_id=earner_id).sum("bonus_eur") or 0.0
+    else:
+        total_earnings = 0.0
 
     total_rides = await Timeslots.filter(user_id=current_user.user_id).count()
+    logger.info(f"Total earnings query result: {total_earnings}")
+    
+
     user_stats = {
         "id": current_user.user_id,
-        "total_rides": total_rides
+        "total_rides": total_rides,
+        "total_earnings": total_earnings or 0.0,
     }
             
     

@@ -38,3 +38,9 @@ class RidesTrips(Model):
     tips = fields.FloatField(null=True)
     payment_type = fields.CharField(max_length=50, null=True)
     date = fields.DateField(null=True)
+
+    class Meta:
+        app = "models"
+        table = "rides_trips"
+
+EventSchema = pydantic_model_creator(RidesTrips)

@@ -12,7 +12,10 @@ class Users(Model):
     lastname = fields.CharField(max_length=30, null=True)
     isBreakMode = fields.BooleanField(default=False)
 
-    earners: fields.ReverseRelation["UsersEarners"]
+    # Many-to-many relationship to Earners through UsersEarners
+    earners: fields.ManyToManyRelation["UsersEarners"] = fields.ManyToManyField(
+        "models.Earners", related_name="users", through="models.UsersEarners"
+    )
 
     class Meta:
         app = "models"

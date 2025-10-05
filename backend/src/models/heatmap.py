@@ -21,3 +21,5 @@ class Heatmap(Model):
 
     def __str__(self):
         return self.hexagon_id_9
+    
+EventSchema = pydantic_model_creator(Heatmap)

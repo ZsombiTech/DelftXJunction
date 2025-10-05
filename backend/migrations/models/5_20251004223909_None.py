@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS "users" (
     "lastname" VARCHAR(30)
 );
 CREATE TABLE IF NOT EXISTS "users_earners" (
+    "id" SERIAL NOT NULL PRIMARY KEY,
     "earner_id" TEXT NOT NULL REFERENCES "earners" ("earner_id") ON DELETE CASCADE,
     "user_id" INT NOT NULL REFERENCES "users" ("user_id") ON DELETE CASCADE
 );
