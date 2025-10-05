@@ -2,6 +2,7 @@ import copy
 import sys
 import hashlib
 import json
+from src.models.rides_trips import RidesTrips
 from src.ml.data import get_travel_time, point_near_zone
 from src.ml.zone_density_cache import get_current_zone_densities, initialize_zone_density_cache, get_zone_densities_for_time
 from src.utils.logger import logger
@@ -17,6 +18,70 @@ from itertools import combinations, product
 router = APIRouter(prefix="/predictions", tags=["predictions"])
 
 progress_counter = 0
+
+
+async def update_driver_states_from_trips(time):
+    """
+    Load trips table into memory and update driver states.
+    Changes drivers from 'engaged' to 'online' when their trips are completed.
+    """
+    logger.info("Loading trips data and updating driver states...")
+
+    # Get all trips and load into memory
+    trips = await RidesTrips.all().select_related('driver')
+
+    # Track drivers who had trips
+    drivers_with_completed_trips = set()
+    drivers_with_active_trips = set()
+
+    for trip in trips:
+        trip_end_time = trip.end_time.replace(
+            tzinfo=None) if trip.end_time and trip.end_time.tzinfo else trip.end_time
+        trip_start_time = trip.start_time.replace(
+            tzinfo=None) if trip.start_time and trip.start_time.tzinfo else trip.start_time
+        current_time = time.replace(tzinfo=None) if time.tzinfo else time
+
+        if trip_end_time and trip_end_time <= current_time:
+            # Trip is completed
+            drivers_with_completed_trips.add(trip.driver.earner_id)
+        elif trip_start_time and trip_start_time < current_time and trip_end_time and trip_end_time > current_time:
+            # Trip is active (started but not ended, or ends in future)
+            drivers_with_active_trips.add(trip.driver.earner_id)
+
+        # Update driver states
+        updated_count = 0
+
+        # Set drivers with active trips to 'engaged'
+    for driver_id in drivers_with_active_trips:
+        await Earners.filter(earner_id=driver_id).update(status="engaged")
+        updated_count += 1
+        logger.debug(f"Set driver {driver_id} to 'engaged' (active trip)")
+
+        # Set drivers with only completed trips (no active trips) to 'online'
+        drivers_to_online = drivers_with_completed_trips - drivers_with_active_trips
+    for driver_id in drivers_to_online:
+        # with 50% chance, make driver go offline for break
+        if random.random() < 0.5:
+            await Earners.filter(earner_id=driver_id).update(status="offline")
+            updated_count += 1
+            logger.debug(f"Set driver {driver_id} to 'offline' for break")
+        else:
+            await Earners.filter(earner_id=driver_id).update(status="online")
+            updated_count += 1
+            logger.debug(
+                f"Set driver {driver_id} to 'online' (trip completed)")
+
+    logger.info(
+        f"Updated {updated_count} driver states based on trip data")
+    logger.info(
+        f"Active trips: {len(drivers_with_active_trips)}, Completed trips: {len(drivers_to_online)}")
+
+    return {
+        "trips_loaded": len(trips),
+        "drivers_engaged": len(drivers_with_active_trips),
+        "drivers_online": len(drivers_to_online),
+        "total_updated": updated_count
+    }
 
 
 @dataclass
@@ -406,6 +471,10 @@ async def state_space_search(city_id: int, max_depth: int, custom_time: datetime
     if custom_time:
         time = custom_time
         logger.info(f"Using custom time: {time}")
+
+    # Update driver states from trips before starting SSS
+    trip_update_result = await update_driver_states_from_trips(time)
+    logger.info(f"Trip update result: {trip_update_result}")
 
     # Pre-compute zone-to-zone travel times for performance optimization
     logger.info("Pre-computing zone distances...")
