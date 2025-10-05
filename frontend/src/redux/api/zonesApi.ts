@@ -5,12 +5,10 @@ import { type Zone } from "../../types";
 
 interface HeatmapZonesResponse extends Array<Zone> {}
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
-
 export const zonesApi = createApi({
   reducerPath: "zonesApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE,
+    baseUrl: `${import.meta.env.VITE_APP_BACKEND_URL}`,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).user.token;
       if (token) {
