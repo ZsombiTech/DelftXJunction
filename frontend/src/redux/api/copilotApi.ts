@@ -1,3 +1,4 @@
+/* eslint-disable no-empty-pattern */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
@@ -21,9 +22,9 @@ export const copilotApi = createApi({
         url: "driver-stats",
         method: "GET",
       }),
-      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+      async onQueryStarted(_, {}) {
         try {
-          const { data } = await queryFulfilled;
+          // const { data } = await queryFulfilled;
           // Optionally, you can dispatch actions to store statistics in the Redux state
           // await dispatch(statsSlice.actions.setStatistics(data));
         } catch (error) {
