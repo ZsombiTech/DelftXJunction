@@ -1,6 +1,7 @@
 from tortoise import fields, Model
 from tortoise.contrib.pydantic import pydantic_model_creator
 
+
 class RidesTrips(Model):
     ride_id = fields.TextField(pk=True)
     driver = fields.ForeignKeyField(
@@ -45,5 +46,6 @@ class RidesTrips(Model):
     class Meta:
         app = "models"
         table = "rides_trips"
+
 
 RidesTripsSchema = pydantic_model_creator(RidesTrips)

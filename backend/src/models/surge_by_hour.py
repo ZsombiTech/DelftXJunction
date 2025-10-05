@@ -16,3 +16,5 @@ class SurgeByHour(Model):
 
     def __str__(self):
         return f"{self.city_id} - {self.hour}"
+
+EventSchema = pydantic_model_creator(SurgeByHour)
