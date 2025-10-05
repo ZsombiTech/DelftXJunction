@@ -76,6 +76,7 @@ async def register(user_data: UserRegister):
         isBreakMode=False  # Default value; adjust as needed
     )
 
+
 @router.post("/toggle_break_mode", response_model=RegisterResponse)
 async def toggle_break_mode(
     current_user: Users = Depends(get_current_user)
@@ -187,4 +188,3 @@ async def update_profile(
         isRestNow=is_rest_now,
         isBreakMode=current_user.isBreakMode
     )
-

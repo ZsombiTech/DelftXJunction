@@ -1,6 +1,7 @@
 from tortoise import fields, Model
 from tortoise.contrib.pydantic import pydantic_model_creator
 
+
 class CancellationRates(Model):
     city_id = fields.ForeignKeyField(
         "models.Cities",
