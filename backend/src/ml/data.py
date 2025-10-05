@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 from shapely import GeometryCollection, MultiPolygon
+from src.utils.logger import logger
 import traveltimepy as tt
-from traveltimepy.requests.common import Coordinates
+from traveltimepy.requests.common import Coordinates, Location
+from traveltimepy.requests.time_filter import TimeFilterDepartureSearch, Driving
 from traveltimepy.responses.time_map import Shape
 import os
+import json
 from dotenv import load_dotenv
 from shapely.geometry import Point, Polygon
 
@@ -13,6 +16,25 @@ app_id = os.getenv("TRAVELTIME_APP_ID")
 api_key = os.getenv("TRAVELTIME_API_KEY")
 
 client = tt.Client(app_id, api_key)
+
+# Cache management
+CACHE_FILE = "travelCache.json"
+
+
+def load_travel_cache():
+    try:
+        with open(CACHE_FILE, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def save_travel_cache(cache):
+    with open(CACHE_FILE, 'w') as f:
+        json.dump(cache, f, indent=2)
+
+
+travel_cache = load_travel_cache()
 
 # Geographical boundary
 CoordinatePolygon = list[tuple[float, float]]
@@ -46,9 +68,24 @@ def point_in_zone(point, zone: ZoneFormat):
     return False
 
 # Check if a point is inside or within a certain distance of a zone
+
+
 def point_near_zone(point, zone: ZoneFormat, distance: float = 0.0005):
     point_geom = Point(point[1], point[0])  # lng, lat for Shapely
     for shape in zone:
+        # Quick bounding box check first (much faster than contains/distance)
+        shell_coords = shape["shell"]
+        min_x = min(coord[0] for coord in shell_coords)
+        max_x = max(coord[0] for coord in shell_coords)
+        min_y = min(coord[1] for coord in shell_coords)
+        max_y = max(coord[1] for coord in shell_coords)
+
+        # Check if point is outside bounding box + distance buffer
+        if (point[1] < min_x - distance or point[1] > max_x + distance or
+                point[0] < min_y - distance or point[0] > max_y + distance):
+            continue
+
+        # Only do expensive polygon operations if bounding box check passes
         polygon = Polygon(shape["shell"], holes=shape["holes"])
         if polygon.contains(point_geom) or polygon.distance(point_geom) < distance:
             return True
@@ -59,11 +96,13 @@ def cut_zone_with_others(zone: ZoneFormat, others: list[ZoneFormat]):
     # Cut others from each shape
     for i, shape in enumerate(zone):
         polygon = Polygon(shape["shell"], holes=shape["holes"])
-        for other in others: # Each outer zone
-            for other_shape in other: # Each shape in the outer zone
-                other_polygon = Polygon(other_shape["shell"], holes=other_shape["holes"])
-                polygon: Polygon | MultiPolygon = polygon.difference(other_polygon)
-        
+        for other in others:  # Each outer zone
+            for other_shape in other:  # Each shape in the outer zone
+                other_polygon = Polygon(
+                    other_shape["shell"], holes=other_shape["holes"])
+                polygon: Polygon | MultiPolygon = polygon.difference(
+                    other_polygon)
+
         # Remove polygon if it's empty
         if polygon.is_empty:
             zone.pop(i)
@@ -71,7 +110,8 @@ def cut_zone_with_others(zone: ZoneFormat, others: list[ZoneFormat]):
 
         # If polygon is a GeometryCollection, append it to the zone
         if polygon.geom_type == "GeometryCollection":
-            polygon = MultiPolygon([geom for geom in polygon.geoms if geom.geom_type == "Polygon"])
+            polygon = MultiPolygon(
+                [geom for geom in polygon.geoms if geom.geom_type == "Polygon"])
             continue
 
         # minds in motion motto connection idea
@@ -79,7 +119,7 @@ def cut_zone_with_others(zone: ZoneFormat, others: list[ZoneFormat]):
         # In case of MultiPolygon, extract bodies and append them to the zone
         if polygon.geom_type == "MultiPolygon":
             zone.pop(i)
-            
+
             for body in polygon.geoms:
                 if body.geom_type == "GeometryCollection":
                     print(body)
@@ -89,7 +129,7 @@ def cut_zone_with_others(zone: ZoneFormat, others: list[ZoneFormat]):
                     "holes": [list(hole.coords) for hole in body.interiors]
                 })
             continue
-        
+
         # If polygon, convert back to ZoneFormat
         if polygon.geom_type == "Polygon":
             zone[i] = {
@@ -97,10 +137,10 @@ def cut_zone_with_others(zone: ZoneFormat, others: list[ZoneFormat]):
                 "holes": [list(hole.coords) for hole in polygon.interiors]
             }
             continue
-        
+
         # Else, drop it
         zone.pop(i)
-    
+
     return zone
 
 
@@ -109,7 +149,8 @@ def cut_poly_with_others(poly: Polygon, others: MultiPolygon):
         poly = poly.difference(other)
 
     if poly.geom_type == "GeometryCollection":
-        poly = MultiPolygon([geom for geom in poly.geoms if geom.geom_type == "Polygon"])
+        poly = MultiPolygon(
+            [geom for geom in poly.geoms if geom.geom_type == "Polygon"])
 
     if poly.geom_type == "MultiPolygon":
         poly: MultiPolygon = poly
@@ -133,7 +174,7 @@ def get_zone(lat, lng, seconds):
                     },
                     "arrival_time": datetime.now() + timedelta(seconds=seconds),
                     "travel_time": seconds,
-                    "transportation": "driving",
+                    "transportation": "cycling",
                     "level_of_detail": {
                         "scale_type": {
                             "level": "lowest"
@@ -155,6 +196,64 @@ def get_zone(lat, lng, seconds):
     #     zone[i]["shell"] = list(Polygon(zone[i]["shell"]).simplify(0.0005).exterior.coords)
 
     return zone
+
+
+def get_travel_time(origin, destination, start_time):
+    # Create cache key with rounded coordinates to improve cache hit rate
+    cache_key = f"{round(origin[0], 6)},{round(origin[1], 6)}-{round(destination[0], 6)},{round(destination[1], 6)}"
+
+    # Check cache first
+    if cache_key in travel_cache:
+        logger.info(f"Cache hit for {cache_key}")
+        return travel_cache[cache_key]
+
+    logger.info(f"Cache miss for {cache_key}, making API call")
+
+    response = client.time_filter(
+        locations=[
+            Location(
+                id="origin",
+                coords=Coordinates(lat=origin[0], lng=origin[1])
+            ),
+            Location(
+                id="destination",
+                coords=Coordinates(lat=destination[0], lng=destination[1])
+            )
+        ],
+        departure_searches=[
+            TimeFilterDepartureSearch(
+                id="1",
+                departure_location_id="origin",
+                arrival_location_ids=["destination"],
+                travel_time=3600,  # 1 hour max travel time in seconds
+                departure_time=start_time,
+                transportation=Driving(),
+                properties=["travel_time"]
+            )
+        ],
+        arrival_searches=[]
+    )
+
+    logger.info(f"Travel time response: {response}")
+
+    if response.results and response.results[0].locations:
+        travel_time = response.results[0].locations[0].properties[0].travel_time
+        logger.info(f"Travel time: {travel_time} seconds")
+
+        # Cache the result
+        travel_cache[cache_key] = travel_time
+        save_travel_cache(travel_cache)
+
+        return travel_time
+    else:
+        logger.warning("No travel time found")
+        default_time = 360000  # Return max travel time if no result
+
+        # Cache the default result to avoid repeated failed API calls
+        travel_cache[cache_key] = default_time
+        save_travel_cache(travel_cache)
+
+        return default_time
 
 
 def test():
